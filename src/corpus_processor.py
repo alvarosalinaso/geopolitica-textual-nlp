@@ -12,8 +12,8 @@ class GeopoliticalExtractor:
     y LOC (Locations).
     """
     
-    def __init__(self, model_size="es_core_news_sm"):
-        # Intentamos cargar el modelo rápido (Small) por defecto para entornos visuales sin GPU GPU pesadas
+    def __init__(self, model_size="es_core_news_md"):
+        # Intentamos cargar el modelo mediano (Medium) por defecto para capturar vectores contextuales sin GPU pesadas
         try:
             self.nlp = spacy.load(model_size)
         except OSError:

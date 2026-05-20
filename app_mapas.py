@@ -33,7 +33,7 @@ st.markdown("Plataforma interactiva de **Distant Reading**. Descubre qué territ
 @st.cache_data
 def load_and_extract_data():
     dataset_path = os.path.join("data", "sample_speeches.csv")
-    extractor = GeopoliticalExtractor(model_size="es_core_news_sm")
+    extractor = GeopoliticalExtractor(model_size="es_core_news_md")
     results = extractor.process_corpus(dataset_path)
     return results
 

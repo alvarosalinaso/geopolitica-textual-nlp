@@ -1,4 +1,4 @@
-﻿# Cartografía de Datos y NLP en Humanidades Digitales: Análisis del Discurso y Fricciones de Poder Geopolítico
+# Cartografía de Datos y NLP en Humanidades Digitales: Análisis del Discurso y Fricciones de Poder Geopolítico
 
 🚀 **[Ver Panel Interactivo en Vivo](https://geopolitica-textual-nlp.streamlit.app)** *(Si aplica enlace en Streamlit Cloud)*
 
@@ -31,9 +31,9 @@ El sistema se estructura en un pipeline desacoplado que garantiza eficiencia y p
 
 [INSERTAR DIAGRAMA DE ARQUITECTURA DE DATOS: CORPUS TEXTUAL -> SPACY NER PIPELINE -> FOLIUM MAPS -> STREAMLIT DASHBOARD AQUÍ]
 
-1. **Motor Lingüístico Computacional (spaCy NER):** Inyección de modelos pre-entrenados en español optimizados para el Reconocimiento de Entidades Nombradas (NER). El procesador está calibrado contextual y semánticamente para resolver ambigüedades geográficas (p. ej., distinguir de forma precisa cuándo "Santiago" refiere a un lugar [GPE] y cuándo a una entidad de nombre propio [PERSON]), superando las limitaciones operativas de las búsquedas basadas en expresiones regulares (*Regex*).
+1. **Motor Lingüístico Computacional (spaCy NER):** Inyección de modelos pre-entrenados en español optimizados para el Reconocimiento de Entidades Nombradas (NER). Se requiere el uso del modelo mediano (`es_core_news_md`) o grande (`es_core_news_lg`), los cuales incorporan vectores de palabras reales (*word vectors*) para capturar el contexto semántico circundante. Esto calibra de forma robusta al procesador para resolver ambigüedades geográficas complejas (p. ej., distinguir con precisión si "Santiago" se refiere a la capital [GPE] o a un nombre de pila [PERSON]), superando el ruido y la baja precisión del modelo básico (`sm`) y las limitaciones operativas del filtrado por expresiones regulares (*Regex*).
 2. **Pipeline ETL y Procesamiento de Corpus (`src/corpus_processor.py`):** Ingesta paralela de conjuntos documentales (`sample_speeches.csv`), normalización ortográfica, tokenización y cálculo de frecuencias relativas normalizadas por volumen de palabras de cada discurso.
-3. **Cartografía Interactiva y Topología GIS (Folium/OSM):** Traducción directa de las entidades de texto detectadas en coordenadas geográficas reales. Inyección de mapas dinámicos interactivos y nubes de calor espacializados renderizados mediante Folium y OpenStreetMaps.
+3. **Geocodificación y Topología GIS (Folium/OSM):** Enriquecimiento de las entidades de texto mediante un módulo de geocodificación (integración de diccionario de geocodificación estática para el prototipo y consulta asíncrona a APIs de GeoNames / Nominatim de OpenStreetMap en producción) para asignar coordenadas geométricas (Latitud/Longitud) precisas, permitiendo la renderización de mapas dinámicos interactivos, burbujas y nubes de calor espacializados mediante Folium.
 4. **Dashboard Asíncrono de Visualización (Streamlit):** Front-end dinámico (`app_mapas.py`) que expone los cambios en las dinámicas geográficas del discurso en tiempo real, permitiendo filtrar tendencias históricas por años y tipos de archivos de forma interactiva.
 
 ---
@@ -42,7 +42,7 @@ El sistema se estructura en un pipeline desacoplado que garantiza eficiencia y p
 
 La cartografía cuantitativa realizada sobre el corpus textual del proyecto arroja hallazgos analíticos de alto impacto para la toma de decisiones:
 
-- **Detección de Sesgo Centralista:** El análisis espacial demuestra que más del 70% de la atención del discurso en periodos críticos se focaliza en el eje metropolitano principal, evidenciando una brecha sustancial respecto a las promesas de descentralización y distribución territorial de la inversión pública.
+- **Detección de Sesgo Centralista y Mitigación de Ruido Administrativo:** El análisis espacial demuestra que más del 70% de la atención del discurso en periodos críticos se focaliza en el eje metropolitano principal, evidenciando una brecha sustancial respecto a las promesas de descentralización. Para garantizar el rigor científico de este insight y evitar la contaminación por "falsos positivos" de firmas burocráticas u hojas de firmas institucionales (p. ej., "Palacio de La Moneda, Santiago de Chile"), el pipeline aplica un filtro de exclusión de stop-words geográficos corporativos y metadatos administrativos, analizando exclusivamente el cuerpo semántico e intencional del discurso político activo.
 - **Transición de Fricciones de Poder:** Los mapas de calor históricos revelan la transición espacial del interés económico nacional a través de las décadas, identificando los periodos exactos en que los polos mineros o industriales desplazaron al foco agropecuario tradicional en el debate legislativo.
 - **Rigor en Humanidades Digitales y Auditoría Pública:** La combinación de IA lingüística con visualización espacial aporta una capa de trazabilidad objetiva e incuestionable para auditorías institucionales y consultorías de políticas públicas regionales.
 
@@ -75,8 +75,9 @@ La arquitectura del proyecto está diseñada para ser completamente portable y f
    ```
 4. **Instalación obligatoria del modelo lingüístico en español:**
    ```bash
-   python -m spacy download es_core_news_sm
+   python -m spacy download es_core_news_md
    ```
+   *(Nota: Se utiliza `es_core_news_md` o `es_core_news_lg` para asegurar que el modelo cuente con vectores de palabras que entiendan la semántica contextual y eviten las ambigüedades).*
 5. **Ejecución del Dashboard de Cartografía Textual:**
    ```bash
    streamlit run app_mapas.py
