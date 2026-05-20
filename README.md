@@ -1,4 +1,4 @@
-# Cartografía de Datos y NLP en Humanidades Digitales: Análisis del Discurso y Fricciones de Poder Geopolítico
+﻿# Cartografía de Datos y NLP en Humanidades Digitales: Análisis del Discurso y Fricciones de Poder Geopolítico
 
 🚀 **[Ver Panel Interactivo en Vivo](https://geopolitica-textual-nlp.streamlit.app)** *(Si aplica enlace en Streamlit Cloud)*
 
@@ -85,5 +85,5 @@ La arquitectura del proyecto está diseñada para ser completamente portable y f
 ---
 
 > **Álvaro Salinas Ortiz**
-> *Asesor Estratégico en Toma de Datos y Análisis*
+> *Consultor en Estrategia de Datos y Analítica Avanzada*
 > [LinkedIn](https://www.linkedin.com/in/alvaro-salinas-ortiz) | [Portafolio Web](https://alvarosalinaso.github.io)
