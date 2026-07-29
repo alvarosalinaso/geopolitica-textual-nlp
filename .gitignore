@@ -1,0 +1,18 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (keep only raw data tracked)
+data/processed/
+data/export/
+
+# OS
+.DS_Store
+Thumbs.db
