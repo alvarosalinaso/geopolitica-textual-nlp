@@ -1,9 +1,11 @@
+import os
+
 import pandas as pd
 import spacy
-import os
 
 # Notas de despliegue: Si es primera vez, se debe instalar el modelo de spacy localmente con:
 # python -m spacy download es_core_news_md
+
 
 class GeopoliticalExtractor:
     """
@@ -11,13 +13,15 @@ class GeopoliticalExtractor:
     Analiza un corpus buscando explícitamente entidades del tipo GPE (Geo-Political Entity)
     y LOC (Locations).
     """
-    
+
     def __init__(self, model_size="es_core_news_md"):
         # Intentamos cargar el modelo mediano (Medium) por defecto para capturar vectores contextuales sin GPU pesadas
         try:
             self.nlp = spacy.load(model_size)
         except OSError:
-            print(f"Cargando fallback NLP. Asegúrese de ejecutar: python -m spacy download {model_size}")
+            print(
+                f"Cargando fallback NLP. Asegúrese de ejecutar: python -m spacy download {model_size}"
+            )
             # En un entorno productivo, esto detiene el flujo o fuerza la descarga. Aquí lo aislamos.
             self.nlp = None
 
@@ -28,25 +32,28 @@ class GeopoliticalExtractor:
         """
         if not self.nlp:
             return pd.DataFrame()
-            
+
         df = pd.read_csv(csv_filepath)
         extracted_data = []
 
         for index, row in df.iterrows():
-            text = row['text']
+            text = row["text"]
             doc = self.nlp(text)
-            
+
             # Filtramos solo Entidades Geopolíticas mencionadas por el orador
-            places = [ent.text for ent in doc.ents if ent.label_ in ['LOC', 'GPE']]
-            
+            places = [ent.text for ent in doc.ents if ent.label_ in ["LOC", "GPE"]]
+
             for place in places:
-                extracted_data.append({
-                    "Year": row['year'],
-                    "Speaker": row['speaker'],
-                    "Mentioned_Location": place
-                })
+                extracted_data.append(
+                    {
+                        "Year": row["year"],
+                        "Speaker": row["speaker"],
+                        "Mentioned_Location": place,
+                    }
+                )
 
         return pd.DataFrame(extracted_data)
+
 
 if __name__ == "__main__":
     # Testeo local aislado

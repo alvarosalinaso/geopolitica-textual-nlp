@@ -1,5 +1,7 @@
 # Cartografía de Datos y NLP en Humanidades Digitales: Análisis del Discurso y Fricciones de Poder Geopolítico
 
+[![CI](https://github.com/alvarosalinaso/geopolitica-textual-nlp/actions/workflows/ci.yml/badge.svg)](https://github.com/alvarosalinaso/geopolitica-textual-nlp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 🚀 **[Ver Panel Interactivo en Vivo](https://geopolitica-textual-nlp.streamlit.app)** *(Si aplica enlace en Streamlit Cloud)*
 
 ---
