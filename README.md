@@ -1,8 +1,10 @@
 # Cartografía de Datos y NLP en Humanidades Digitales: Análisis del Discurso y Fricciones de Poder Geopolítico
 
 [![CI](https://github.com/alvarosalinaso/geopolitica-textual-nlp/actions/workflows/ci.yml/badge.svg)](https://github.com/alvarosalinaso/geopolitica-textual-nlp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-🚀 **[Ver Panel Interactivo](https://geopolitica-textual-nlp.streamlit.app)** *(El deploy en Streamlit Cloud activa este enlace)*
+[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://python.org)
+[![spaCy](https://img.shields.io/badge/spaCy-3.x-09A3D5?logo=spacy&logoColor=white)](https://spacy.io)
+[![Plotly.js](https://img.shields.io/badge/Plotly.js-3.x-3F4F75?logo=plotly&logoColor=white)](https://plotly.com/javascript/)
+[![Folium](https://img.shields.io/badge/Folium-0.16%2B-77B829?logo=leaflet&logoColor=white)](https://python-visualization.github.io/folium/)
 
 ---
 
@@ -14,8 +16,6 @@ Esta infraestructura analítica permite a Directivos del Sector Público, Asesor
 1. **Auditoría de Equidad Territorial e Inversión Regional:** Contrastar cuantitativamente si las prioridades de inversión declaradas por una institución o gobierno se reflejan simétricamente en el discurso político y legal, permitiendo corregir desajustes en el foco de desarrollo territorial.
 2. **Evaluación de Reputación y Estrategia Geopolítica:** Monitorear y cartografiar las zonas geográficas con mayor fricción o relevancia en corpus textuales internacionales o normativos, optimizando la asignación de recursos diplomáticos, comerciales o de mitigación de riesgo.
 3. **Optimización de Políticas Públicas y Análisis de Impacto:** Evaluar de qué manera reformas legales o planes de desarrollo históricos han redistribuido la atención regulatoria a lo largo del territorio nacional a través de las décadas.
-
-[INSERTAR MAPA DE CALOR INTERACTIVO Y CARTOGRAFÍA DE ENTIDADES NOMBRADAS AQUÍ]
 
 ---
 
@@ -31,12 +31,10 @@ El desafío de este proyecto consiste en **desarrollar un puente metodológico y
 
 El sistema se estructura en un pipeline desacoplado que garantiza eficiencia y precisión en la extracción de datos cualitativos para transformarlos en métricas de negocio medibles:
 
-[INSERTAR DIAGRAMA DE ARQUITECTURA DE DATOS: CORPUS TEXTUAL -> SPACY NER PIPELINE -> FOLIUM MAPS -> STREAMLIT DASHBOARD AQUÍ]
-
 1. **Motor Lingüístico Computacional (spaCy NER):** Inyección de modelos pre-entrenados en español optimizados para el Reconocimiento de Entidades Nombradas (NER). Se requiere el uso del modelo mediano (`es_core_news_md`) o grande (`es_core_news_lg`), los cuales incorporan vectores de palabras reales (*word vectors*) para capturar el contexto semántico circundante. Esto calibra de forma robusta al procesador para resolver ambigüedades geográficas complejas (p. ej., distinguir con precisión si "Santiago" se refiere a la capital [GPE] o a un nombre de pila [PERSON]), superando el ruido y la baja precisión del modelo básico (`sm`) y las limitaciones operativas del filtrado por expresiones regulares (*Regex*).
 2. **Pipeline ETL y Procesamiento de Corpus (`src/corpus_processor.py`):** Ingesta paralela de conjuntos documentales (`sample_speeches.csv`), normalización ortográfica, tokenización y cálculo de frecuencias relativas normalizadas por volumen de palabras de cada discurso.
 3. **Geocodificación y Topología GIS (Folium/OSM):** Enriquecimiento de las entidades de texto mediante un módulo de geocodificación (integración de un Gazetteer local estático para la optimización del prototipo y consulta asíncrona a APIs de GeoNames / Nominatim de OpenStreetMap en producción) para asignar coordenadas geométricas (Latitud/Longitud) precisas, permitiendo la renderización de mapas dinámicos interactivos, burbujas y nubes de calor espacializados mediante Folium.
-4. **Dashboard Asíncrono de Visualización (Streamlit):** Front-end dinámico (`app_mapas.py`) que expone los cambios en las dinámicas geográficas del discurso en tiempo real, permitiendo filtrar tendencias históricas por años y tipos de archivos de forma interactiva.
+4. **Exportación JSON para Portfolio Web:** Datos serializados (`geopolitica-entities.json`) para consumo en Portfolio Web con **Plotly.js + Leaflet/Mapbox**, permitiendo visualizaciones interactivas estáticas (GitHub Pages) sin backend Python.
 
 ---
 
@@ -47,8 +45,6 @@ La cartografía cuantitativa realizada sobre el corpus textual del proyecto arro
 - **Detección de Sesgo Centralista y Mitigación de Ruido Administrativo:** El análisis espacial demuestra que más del 70% de la atención del discurso en periodos críticos se focaliza en el eje metropolitano principal, evidenciando una brecha sustancial respecto a las promesas de descentralización. Para garantizar el rigor científico de este insight y evitar la contaminación por "falsos positivos" de firmas burocráticas u hojas de firmas institucionales (p. ej., "Palacio de La Moneda, Santiago de Chile"), el pipeline aplica un filtro de exclusión de stop-words geográficos corporativos y metadatos administrativos, analizando exclusivamente el cuerpo semántico e intencional del discurso político activo.
 - **Transición de Fricciones de Poder:** Los mapas de calor históricos revelan la transición espacial del interés económico nacional a través de las décadas, identificando los periodos exactos en que los polos mineros o industriales desplazaron al foco agropecuario tradicional en el debate legislativo.
 - **Rigor en Humanidades Digitales y Auditoría Pública:** La combinación de IA lingüística con visualización espacial aporta una capa de trazabilidad objetiva e incuestionable para auditorías institucionales y consultorías de políticas públicas regionales.
-
-[INSERTAR GRÁFICO DE LÍNEA DE TIEMPO DEL FOCUS REGIONAL EN EL DISCURSO LEGISLATIVO AQUÍ]
 
 ---
 
@@ -80,13 +76,15 @@ La arquitectura del proyecto está diseñada para ser completamente portable y f
    python -m spacy download es_core_news_md
    ```
    *(Nota: Se utiliza `es_core_news_md` o `es_core_news_lg` para asegurar que el modelo cuente con vectores de palabras que entiendan la semántica contextual y eviten las ambigüedades).*
-5. **Ejecución del Dashboard de Cartografía Textual:**
+5. **Generar datos para Portfolio Web:**
    ```bash
-   streamlit run app_mapas.py
+   python src/export_json.py
    ```
+6. **Ver Dashboard Interactivo:**
+   **[https://alvarosalinaso.github.io/portfolio-web/](https://alvarosalinaso.github.io/portfolio-web/)** → Tab **"🗺️ Geopolítica Textual NLP"** (pendiente de integración completa)
 
 ---
 
 > **Álvaro Salinas Ortiz**
 > *Consultor en Estrategia de Datos y Analítica Avanzada*
-> [LinkedIn](https://www.linkedin.com/in/alvaro-salinas-ortiz) | [Portafolio Web](https://alvarosalinaso.github.io)
+> [LinkedIn](https://www.linkedin.com/in/alvaro-salinas-ortiz) | [Portafolio Web](https://alvarosalinaso.github.io/portfolio-web/)
