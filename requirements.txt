@@ -1,6 +1,4 @@
 spacy==3.7.4
 pandas==2.2.1
-streamlit==1.32.2
 folium==0.15.1
-streamlit-folium==0.19.1
 geopandas==0.14.3

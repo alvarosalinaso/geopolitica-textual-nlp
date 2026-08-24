@@ -191,7 +191,7 @@ def generate_embed_snippets(export_dir):
 ### Notas de Uso
 1. Reemplace `SIMPLIFICAR_ID` / `@USUARIO/SIMPLIFICAR_VIZ` con sus IDs reales tras subir los CSV a cada plataforma.
 2. Los CSV generados en `data/export/` son la fuente de datos para cada visualización.
-3. Para incrustar directamente en Streamlit, use `st.components.v1.html()` con estos snippets.
+3. Para incrustar en cualquier plataforma web, utilice los snippets HTML proporcionados.
 """
     output_path = os.path.join(export_dir, "embed_snippets.md")
     with open(output_path, "w", encoding="utf-8") as f:

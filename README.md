@@ -138,8 +138,6 @@ geopolitica-textual-nlp/
 ├── data/
 │   ├── sample_speeches.csv       # Corpus de discursos historicos
 │   └── export/                   # CSVs generados para Datawrapper/Flourish/Observable
-├── app.py                        # Entrypoint Streamlit
-├── app_mapas.py                  # Dashboard de mapas Folium
 ├── requirements.txt              # Dependencias Python
 ├── LICENSE                       # Licencia MIT
 └── README.md                     # Este archivo
