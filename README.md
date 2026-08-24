@@ -1,4 +1,4 @@
-# Cartografía de Datos y NLP en Humanidades Digitales: Análisis del Discurso y Fricciones de Poder Geopolítico
+# Pipeline NLP-GIS para Auditoría de Discurso Político en Humanidades Digitales
 
 [![CI](https://github.com/alvarosalinaso/geopolitica-textual-nlp/actions/workflows/ci.yml/badge.svg)](https://github.com/alvarosalinaso/geopolitica-textual-nlp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://python.org)
@@ -8,83 +8,145 @@
 
 ---
 
-## Executive Summary & Decision Making
+## 1. Titulo Academico y Contexto Estrategico
 
-Este proyecto establece un pipeline avanzado de **Procesamiento de Lenguaje Natural (NLP)** y **Sistemas de Información Geográfica (GIS)** para auditar a gran escala la evolución de discursos políticos, marcos jurídicos o informes de sostenibilidad. Utilizando metodologías de *Distant Reading* (Lectura Distante), el sistema extrae automáticamente miles de Entidades Nombradas Geopolíticas (GPE) de corpus textuales históricos y contemporáneos masivos, eliminando los sesgos y limitaciones de tiempo de la lectura manual e inyectando rigor cuantitativo en el análisis hermenéutico del discurso.
+Este repositorio implementa un pipeline integrado de **Procesamiento de Lenguaje Natural (NLP)** y **Sistemas de Informacion Geografica (GIS)** orientado a la auditoria sistematica de discursos politicos, marcos juridicos e informes de sostenibilidad. Adoptamos la metodologia de *Distant Reading* propuesta por Franco Moretti, aplicando reconocimiento de entidades nombradas (NER) a corpus textuales historicos y contemporaneos para cuantificar patrones de atencion territorial que escapan al analisis manual convencional.
 
-Esta infraestructura analítica permite a Directivos del Sector Público, Asesores de Políticas Públicas y Directores de Estrategia Corporativa tomar **decisiones críticas basadas en evidencia textual**:
-1. **Auditoría de Equidad Territorial e Inversión Regional:** Contrastar cuantitativamente si las prioridades de inversión declaradas por una institución o gobierno se reflejan simétricamente en el discurso político y legal, permitiendo corregir desajustes en el foco de desarrollo territorial.
-2. **Evaluación de Reputación y Estrategia Geopolítica:** Monitorear y cartografiar las zonas geográficas con mayor fricción o relevancia en corpus textuales internacionales o normativos, optimizando la asignación de recursos diplomáticos, comerciales o de mitigación de riesgo.
-3. **Optimización de Políticas Públicas y Análisis de Impacto:** Evaluar de qué manera reformas legales o planes de desarrollo históricos han redistribuido la atención regulatoria a lo largo del territorio nacional a través de las décadas.
+El objeto de estudio es la **cartografia del discurso**: la extraccion automatica y georreferenciacion de entidades geopoliticas (GPE) para evaluar como se distribuye la atencion institucional a lo largo del territorio nacional a lo largo del tiempo. Esta infraestructura se concibe como herramienta de soporte para directivos del sector publico, asesores de politicas publicas y directores de estrategia corporativa que requieren evidencia textual cuantificable para la toma de decisiones.
 
 ---
 
-## Business Context & Challenge
+## 2. Preguntas de Investigacion e Hipotesis
 
-En el análisis estratégico moderno, el volumen de datos textuales no estructurados (leyes, minutas, actas de directorios, discursos, prensa) supera la capacidad de procesamiento de los equipos de análisis humanos. Tradicionalmente, la auditoría del discurso se basaba en análisis cualitativos de muestras pequeñas, lo que inducía a sesgos metodológicos y a una incapacidad sistémica para rastrear tendencias transversales a gran escala.
+El proyecto aborda dos preguntas centrales:
 
-El desafío de este proyecto consiste en **desarrollar un puente metodológico y técnico de grado senior** que integre la inteligencia lingüística computacional con la cartografía espacial. Esto permite responder a la pregunta estratégica de negocio: *¿De qué manera y cuándo se desplazaron los focos de interés y de fricción geopolítica a lo largo del territorio en las narrativas institucionales, y cómo se traduce esto en prioridades operativas?*
+- **P1: Sesgo centralista en el discurso politico.** El eje metropolitano (Santiago) concentra una proporcion desproporcionada de las menciones geopoliticas en los corpus analizados? Cuantificamos que, en periodos criticos, **mas del 70% de la atencion discursiva** se focaliza en el eje metropolitano principal, evidenciando una brecha sustancial respecto a las promesas explicitas de descentralizacion.
 
----
+- **P2: Equidad territorial y transicion del foco economico.** De que manera el interes economico nacional se desplaza espacialmente a lo largo de las decadas? Identificamos la transicion desde un foco agropecuario hacia polos mineros e industriales en el debate legislativo, cartografiando los periodos exactos de estos desplazamientos.
 
-## Data Architecture & Analytical Approach
-
-El sistema se estructura en un pipeline desacoplado que garantiza eficiencia y precisión en la extracción de datos cualitativos para transformarlos en métricas de negocio medibles:
-
-1. **Motor Lingüístico Computacional (spaCy NER):** Inyección de modelos pre-entrenados en español optimizados para el Reconocimiento de Entidades Nombradas (NER). Se requiere el uso del modelo mediano (`es_core_news_md`) o grande (`es_core_news_lg`), los cuales incorporan vectores de palabras reales (*word vectors*) para capturar el contexto semántico circundante. Esto calibra de forma robusta al procesador para resolver ambigüedades geográficas complejas (p. ej., distinguir con precisión si "Santiago" se refiere a la capital [GPE] o a un nombre de pila [PERSON]), superando el ruido y la baja precisión del modelo básico (`sm`) y las limitaciones operativas del filtrado por expresiones regulares (*Regex*).
-2. **Pipeline ETL y Procesamiento de Corpus (`src/corpus_processor.py`):** Ingesta paralela de conjuntos documentales (`sample_speeches.csv`), normalización ortográfica, tokenización y cálculo de frecuencias relativas normalizadas por volumen de palabras de cada discurso.
-3. **Geocodificación y Topología GIS (Folium/OSM):** Enriquecimiento de las entidades de texto mediante un módulo de geocodificación (integración de un Gazetteer local estático para la optimización del prototipo y consulta asíncrona a APIs de GeoNames / Nominatim de OpenStreetMap en producción) para asignar coordenadas geométricas (Latitud/Longitud) precisas, permitiendo la renderización de mapas dinámicos interactivos, burbujas y nubes de calor espacializados mediante Folium.
-4. **Exportación JSON para Portfolio Web:** Datos serializados (`geopolitica-entities.json`) para consumo en Portfolio Web con **Plotly.js + Leaflet/Mapbox**, permitiendo visualizaciones interactivas estáticas (GitHub Pages) sin backend Python.
+La hipotesis operativa es que la distribucion de entidades GPE en el discurso politico refleja de forma empirica las prioridades reales de inversion y atencion territorial, independientemente del enunciado oficial de politicas de descentralizacion.
 
 ---
 
-## Strategic Insights & Impact
+## 3. Pipeline Metodologico y Arquitectura de Datos
 
-La cartografía cuantitativa realizada sobre el corpus textual del proyecto arroja hallazgos analíticos de alto impacto para la toma de decisiones:
+El sistema se estructura en un pipeline desacoplado con cuatro etapas principales:
 
-- **Detección de Sesgo Centralista y Mitigación de Ruido Administrativo:** El análisis espacial demuestra que más del 70% de la atención del discurso en periodos críticos se focaliza en el eje metropolitano principal, evidenciando una brecha sustancial respecto a las promesas de descentralización. Para garantizar el rigor científico de este insight y evitar la contaminación por "falsos positivos" de firmas burocráticas u hojas de firmas institucionales (p. ej., "Palacio de La Moneda, Santiago de Chile"), el pipeline aplica un filtro de exclusión de stop-words geográficos corporativos y metadatos administrativos, analizando exclusivamente el cuerpo semántico e intencional del discurso político activo.
-- **Transición de Fricciones de Poder:** Los mapas de calor históricos revelan la transición espacial del interés económico nacional a través de las décadas, identificando los periodos exactos en que los polos mineros o industriales desplazaron al foco agropecuario tradicional en el debate legislativo.
-- **Rigor en Humanidades Digitales y Auditoría Pública:** La combinación de IA lingüística con visualización espacial aporta una capa de trazabilidad objetiva e incuestionable para auditorías institucionales y consultorías de políticas públicas regionales.
+### 3.1 Motor Lingüistico Computacional (spaCy NER)
+
+Empleamos el modelo pre-entrenado en espanol `es_core_news_md` de spaCy, que incorpora vectores de palabras (*word vectors*) para capturar contexto semantico. Esta eleccion metodologica es critica: el modelo basico (`sm`) y el filtrado por expresiones regulares producen una tasa inaceptable de falsos positivos (por ejemplo, confundiendo "Santiago" como nombre de persona en lugar de entidad geografica). El modelo mediano o grande (`es_core_news_lg`) resuelve estas ambiguedades mediante embeddings contextuales.
+
+### 3.2 Pipeline ETL y Procesamiento de Corpus
+
+El modulo `src/corpus_processor.py` ejecuta la ingesta de conjuntos documentales (formato CSV), normalizacion ortografica, tokenizacion y calculo de frecuencias relativas normalizadas por volumen de palabras de cada documento. Se aplica un filtro de exclusion de stop-words geograficos corporativos y metadatos administrativos (por ejemplo, "Palacio de La Moneda, Santiago de Chile") para aislar exclusivamente el cuerpo semantico e intencional del discurso politico activo.
+
+### 3.3 Geocodificacion y Topologia GIS
+
+La etapa de geocodificacion enriquece las entidades de texto asignando coordenadas geométricas (Latitud/Longitud) mediante integracion de un Gazetteer local estatico para optimizacion del prototipo, con consultas asincronas a APIs de GeoNames / Nominatim de OpenStreetMap en produccion. Folium se utiliza para la renderizacion de mapas dinamicos interactivos, burbujas y nubes de calor espacializados.
+
+### 3.4 Exportacion y Consumo Web
+
+Los datos se serializan en formato JSON (`geopolitica-entities.json`) para consumo en visualizaciones interactivas estaticas via GitHub Pages, empleando Plotly.js y Leaflet/Mapbox sin backend Python.
+
+Los datos exportados se almacenan en `data/export/` como CSVs listos para consumo en las plataformas de visualizacion.
 
 ---
 
-## Infraestructura, Despliegue y Ejecución
+## 4. Hallazgos Clave y Business/Domain Insights
 
-La arquitectura del proyecto está diseñada para ser completamente portable y fácilmente desplegable en cualquier infraestructura local o en la nube.
+Los resultados del pipeline sobre el corpus del proyecto revelan:
+
+- **Sesgo centralista cuantificado:** Mas del 70% de la atencion discursiva en periodos criticos se concentra en el eje metropolitano, lo que constituye evidencia empirica de una brecha entre la retorica de descentralizacion y la distribucion real del interes institucional. Este hallazgo es relevante para la auditoria de equidad territorial y la evaluacion de politicas de desarrollo regional.
+
+- **Transicion espacial del foco economico:** Los mapas de calor historicos revelan la transicion del interes economico nacional a lo largo de las decadas, identificando los periodos exactos en que los polos mineros o industriales desplazaron al foco agropecuario tradicional en el debate legislativo.
+
+- **Rigor metodologico en Humanidades Digitales:** La combinacion de IA lingüistica con visualizacion espacial aporta una capa de trazabilidad objetiva para auditorias institucionales y consultorias de politicas publicas regionales, superando las limitaciones del analisis cualitativo convencional.
+
+---
+
+## 5. Dashboard y Visualizaciones Interactivas
+
+El proyecto incorpora visualizaciones de múltiples capas para la exploracion espacial de los resultados:
+
+### Datawrapper Choropleth Map
+<!-- Embeber mapa coropleth de Datawrapper aqui -->
+```html
+<!-- Datawrapper embed code - placeholder -->
+<iframe title="Distribucion del Discurso Politico por Region" aria-label="Map" src="https://www.datawrapper.de/[ID]/embed" width="100%" height="500" style="border: none;"></iframe>
+```
+
+### Flourish Arc Diagram
+<!-- Embeber diagrama de arco de Flourish aqui -->
+```html
+<!-- Flourish embed code - placeholder -->
+<div class="flourish-embed flourish-arc" data-src="visualisation/[ID]"></div><script src="https://public.flourish.studio/resources/embed.js"></script>
+```
+
+### PyVis / Observable Graph Network
+<!-- Embeber grafo de interacciones Geopoliticas aqui -->
+```html
+<!-- PyVis/Observable embed code - placeholder -->
+<iframe src="graph/geopolitical_network.html" width="100%" height="600" style="border: none;"></iframe>
+```
+
+---
+
+## 6. Reproducibilidad y Entorno Tecnico
 
 ### Prerrequisitos
-- Python 3.9+
+- Python 3.9 o superior
 - Motor de procesamiento de texto spaCy
 
-### Setup y Despliegue Local
-1. **Clonación del repositorio y aislamiento de entorno:**
-   ```bash
-   git clone https://github.com/alvarosalinaso/geopolitica-textual-nlp
-   cd geopolitica-textual-nlp
-   python -m venv .venv
-   ```
-2. **Activación de entorno (Windows):**
-   ```powershell
-   .\.venv\Scripts\activate
-   ```
-3. **Instalación de dependencias del pipeline:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Instalación obligatoria del modelo lingüístico en español:**
-   ```bash
-   python -m spacy download es_core_news_md
-   ```
-   *(Nota: Se utiliza `es_core_news_md` o `es_core_news_lg` para asegurar que el modelo cuente con vectores de palabras que entiendan la semántica contextual y eviten las ambigüedades).*
-5. **Generar datos para Portfolio Web:**
-   ```bash
-   python src/export_json.py
-   ```
-6. **Ver Dashboard Interactivo:**
-   **[https://alvarosalinaso.github.io/portfolio-web/](https://alvarosalinaso.github.io/portfolio-web/)** → Tab **"🗺️ Geopolítica Textual NLP"** (pendiente de integración completa)
+### Configuracion del Entorno
+
+```bash
+# Clonar repositorio
+git clone https://github.com/alvarosalinaso/geopolitica-textual-nlp
+cd geopolitica-textual-nlp
+
+# Crear y activar entorno virtual
+python -m venv .venv
+# En Windows:
+.\.venv\Scripts\activate
+# En Linux/Mac:
+source .venv/bin/activate
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+# Descargar modelo lingüistico en español (obligatorio)
+python -m spacy download es_core_news_md
+```
+
+### Ejecucion del Pipeline
+
+```bash
+# Procesar corpus y extraer entidades geopoliticas
+python src/corpus_processor.py
+
+# Exportar datos para visualizaciones multi-plataforma
+python src/export_visualizations.py
+```
+
+### Estructura del Repositorio
+
+```
+geopolitica-textual-nlp/
+├── src/
+│   ├── corpus_processor.py       # Pipeline ETL + NER (spaCy)
+│   └── export_visualizations.py  # Exportacion CSV multi-plataforma
+├── data/
+│   ├── sample_speeches.csv       # Corpus de discursos historicos
+│   └── export/                   # CSVs generados para Datawrapper/Flourish/Observable
+├── app.py                        # Entrypoint Streamlit
+├── app_mapas.py                  # Dashboard de mapas Folium
+├── requirements.txt              # Dependencias Python
+├── LICENSE                       # Licencia MIT
+└── README.md                     # Este archivo
+```
 
 ---
 
-> **Álvaro Salinas Ortiz**
-> *Consultor en Estrategia de Datos y Analítica Avanzada*
-> [LinkedIn](https://www.linkedin.com/in/alvaro-salinas-ortiz) | [Portafolio Web](https://alvarosalinaso.github.io/portfolio-web/)
+> **Alvaro Salinas Ortiz**
+> *Consultor en Estrategia de Datos y Analitica Avanzada*
+> [LinkedIn](https://www.linkedin.com/in/alvaro-salinas-ortiz) | [Portfolio Web](https://alvarosalinaso.github.io/portfolio-web/)
