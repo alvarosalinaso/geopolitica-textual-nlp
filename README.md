@@ -91,6 +91,38 @@ El proyecto incorpora visualizaciones de múltiples capas para la exploracion es
 
 ---
 
+## Visual Analytics
+
+Interactividad multinivel para exploración de datos y presentación ejecutiva.
+
+<details>
+<summary><strong>Datawrapper — Gráfico interactivo</strong></summary>
+
+<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;">
+  <iframe src="https://datawrapper.dwcdn.net/u5dAm/" title="Distribución Geográfica de Entidades Geopolíticas" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" loading="lazy" allowfullscreen></iframe>
+</div>
+</details>
+
+<details>
+<summary><strong>Flourish — Visualización animada</strong></summary>
+
+<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;">
+  <iframe src="https://flo.uri.sh/visualisation/1304598/embed" title="Co-ocurrencia de Entidades Geopolíticas" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" loading="lazy" allowfullscreen></iframe>
+</div>
+</details>
+
+<details>
+<summary><strong>Observable — Notebook interactivo</strong></summary>
+
+<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;">
+  <iframe src="https://observablehq.com/@alvarosalinaso/geopolitica-frequency" title="Frecuencia de Menciones por Ubicación" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" loading="lazy" allowfullscreen></iframe>
+</div>
+</details>
+
+**Hallazgos clave**: Las entidades geopolíticas muestran patrones de co-ocurrencia fuertes entre países del eje occidental en discursos del patronato.
+
+---
+
 ## 6. Reproducibilidad y Entorno Tecnico
 
 ### Prerrequisitos

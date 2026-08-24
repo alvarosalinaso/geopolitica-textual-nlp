@@ -1,0 +1,40 @@
+source,target,weight
+Antofagasta,Arica,1
+Antofagasta,Iquique,2
+Antofagasta,Puerto Montt,1
+Antofagasta,Punta Arenas,1
+Antofagasta,Santiago,2
+Antofagasta,Valdivia,1
+Antofagasta,Valparaíso,1
+Arica,Iquique,1
+Arica,Punta Arenas,1
+Arica,Santiago,1
+Chillán,Santiago,1
+Chillán,Talca,1
+Chillán,Valparaíso,1
+Concepción,Copiapó,1
+Concepción,Osorno,1
+Concepción,Punta Arenas,1
+Concepción,Santiago,2
+Concepción,Talca,1
+Concepción,Talcahuano,1
+Concepción,Temuco,1
+Concepción,Valdivia,1
+Concepción,Valparaíso,1
+Copiapó,Punta Arenas,1
+Copiapó,Temuco,1
+Iquique,Punta Arenas,1
+Iquique,Santiago,2
+Iquique,Valparaíso,1
+Osorno,Santiago,1
+Osorno,Valdivia,1
+Puerto Montt,Valdivia,1
+Punta Arenas,Santiago,1
+Punta Arenas,Temuco,1
+Santiago,Talca,2
+Santiago,Talcahuano,1
+Santiago,Valdivia,1
+Santiago,Valparaíso,3
+Talca,Talcahuano,1
+Talca,Valparaíso,2
+Talcahuano,Valparaíso,1
