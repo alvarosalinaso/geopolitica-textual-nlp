@@ -1,23 +1,29 @@
 """Tests estadisticos para analisis geopolitico."""
+
 import json
-from pathlib import Path
 from collections import Counter
+from pathlib import Path
 
 try:
-    import numpy as np
+    import numpy as np  # noqa: F401
     from scipy import stats
+
     SCIPY_AVAILABLE = True
 except ImportError:
     SCIPY_AVAILABLE = False
 
 
-def run_statistical_tests(data_dir: Path = Path("data/export"), output_dir: Path = Path("data/export")) -> dict:
+def run_statistical_tests(
+    data_dir: Path = Path("data/export"), output_dir: Path = Path("data/export")
+) -> dict:
     if not SCIPY_AVAILABLE:
         return {}
 
     ner_file = data_dir / "ner_entities.json"
     if not ner_file.exists():
-        print("[STATS] ner_entities.json no encontrado - ejecutar ner_analysis.py primero")
+        print(
+            "[STATS] ner_entities.json no encontrado - ejecutar ner_analysis.py primero"
+        )
         return {}
 
     with open(ner_file, encoding="utf-8") as f:

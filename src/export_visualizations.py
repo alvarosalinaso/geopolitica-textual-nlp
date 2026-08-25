@@ -6,10 +6,10 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.corpus_processor import GeopoliticalExtractor
-from src.ner_analysis import run_ner_analysis
-from src.sentiment_analysis import run_sentiment_analysis
 from src.geo_analysis import run_geo_analysis
+from src.ner_analysis import run_ner_analysis
 from src.rag_analysis import run_rag_analysis
+from src.sentiment_analysis import run_sentiment_analysis
 
 # Diccionario de Geocodificación Estática (mismo que en app_mapas.py)
 GEO_DB = {
@@ -54,7 +54,9 @@ def generate_dw_choropleth_temporal(df_places, export_dir):
         .size()
         .reset_index(name="mentions")
     )
-    grouped.rename(columns={"Year": "year", "Mentioned_Location": "location"}, inplace=True)
+    grouped.rename(
+        columns={"Year": "year", "Mentioned_Location": "location"}, inplace=True
+    )
 
     output_path = os.path.join(export_dir, "dw_choropleth_temporal.csv")
     grouped.to_csv(output_path, index=False)
@@ -75,18 +77,20 @@ def generate_flourish_arc_geopolitica(df_places, export_dir):
     for year, group in df_valid.groupby("Year"):
         locations = group["Mentioned_Location"].unique()
         for i, loc1 in enumerate(locations):
-            for loc2 in locations[i + 1:]:
+            for loc2 in locations[i + 1 :]:
                 co_occur = len(
                     set(group[group["Mentioned_Location"] == loc1]["Speaker"].values)
                     & set(group[group["Mentioned_Location"] == loc2]["Speaker"].values)
                 )
                 if co_occur > 0:
-                    arcs.append({
-                        "source_location": loc1,
-                        "target_location": loc2,
-                        "co_occurrences": co_occur,
-                        "year": year,
-                    })
+                    arcs.append(
+                        {
+                            "source_location": loc1,
+                            "target_location": loc2,
+                            "co_occurrences": co_occur,
+                            "year": year,
+                        }
+                    )
 
     df_arcs = pd.DataFrame(arcs)
     output_path = os.path.join(export_dir, "flourish_arc_geopolitica.csv")
@@ -249,30 +253,43 @@ def main():
         print(f"[✓] NER completado: {ner_results['total']} entidades totales")
 
     print("\n[→] Ejecutando análisis de sentimiento...")
-    sentiment_results = run_sentiment_analysis(data_dir=Path("data"), output_dir=Path(export_dir))
+    sentiment_results = run_sentiment_analysis(
+        data_dir=Path("data"), output_dir=Path(export_dir)
+    )
     if sentiment_results:
-        print(f"[✓] Sentimiento completado: {sentiment_results['n_documents']} documentos analizados")
+        print(
+            f"[✓] Sentimiento completado: {sentiment_results['n_documents']} documentos analizados"
+        )
 
     print("\n[→] Generando mapa geoespacial Folium...")
-    geo_results = run_geo_analysis(data_dir=Path("data/export"), output_dir=Path(export_dir))
+    geo_results = run_geo_analysis(
+        data_dir=Path("data/export"), output_dir=Path(export_dir)
+    )
     if geo_results:
-        print(f"[✓] Mapa geoespacial completado: {geo_results['entities_plotted']} entidades plotteadas")
+        print(
+            f"[✓] Mapa geoespacial completado: {geo_results['entities_plotted']} entidades plotteadas"
+        )
 
     print("\n[→] Ejecutando análisis RAG...")
     rag_results = run_rag_analysis(data_dir=Path("data"), output_dir=Path(export_dir))
     if rag_results:
-        print(f"[✓] RAG completado: {len(rag_results.get('answers', []))} consultas procesadas")
+        print(
+            f"[✓] RAG completado: {len(rag_results.get('answers', []))} consultas procesadas"
+        )
 
     # Statistical tests
     from statistical_tests import run_statistical_tests
+
     run_statistical_tests()
 
     # Generate executive tables
     from generate_tables import generate as generate_exec_tables
+
     generate_exec_tables()
 
     # Generate paper report
     from generate_report import generate_report
+
     generate_report()
 
     print("\n" + "=" * 60)

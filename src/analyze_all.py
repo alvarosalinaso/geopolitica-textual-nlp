@@ -1,8 +1,8 @@
 """
 Orquestador completo: ejecuta todos los scripts de análisis en orden.
 """
+
 import sys
-from pathlib import Path
 
 
 def main():
@@ -16,8 +16,9 @@ def main():
     print("\n[1/3] Ejecutando export_visualizations...")
     try:
         from export_visualizations import main as export_main
+
         export_main()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"[ERROR] export_visualizations: {e}")
         errors.append("export_visualizations")
 
@@ -25,8 +26,9 @@ def main():
     print("\n[2/3] Ejecutando statistical_tests...")
     try:
         from statistical_tests import run_statistical_tests
+
         run_statistical_tests()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"[ERROR] statistical_tests: {e}")
         errors.append("statistical_tests")
 
@@ -34,8 +36,9 @@ def main():
     print("\n[3/3] Ejecutando generate_report...")
     try:
         from generate_report import generate_report
+
         generate_report()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"[ERROR] generate_report: {e}")
         errors.append("generate_report")
 

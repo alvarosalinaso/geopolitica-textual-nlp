@@ -2,12 +2,14 @@
 RAG (Retrieval-Augmented Generation) para análisis geopolítico.
 Recupera contexto de documentos y genera respuestas con LLM.
 """
+
 import json
 import os
 from pathlib import Path
 
 try:
-    import pandas as pd
+    import pandas as pd  # noqa: F401
+
     PANDAS_AVAILABLE = True
 except ImportError:
     PANDAS_AVAILABLE = False
@@ -15,6 +17,7 @@ except ImportError:
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
+
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -49,19 +52,26 @@ class SimpleRAG:
         """Genera respuesta usando OpenAI API."""
         try:
             import openai
+
             client = openai.OpenAI()
 
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "Eres un analista geopolítico experto. Responde basándote SOLO en el contexto proporcionado. Sé conciso y preciso."},
-                    {"role": "user", "content": f"Contexto:\n{context[:3000]}\n\nPregunta: {query}"},
+                    {
+                        "role": "system",
+                        "content": "Eres un analista geopolítico experto. Responde basándote SOLO en el contexto proporcionado. Sé conciso y preciso.",
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Contexto:\n{context[:3000]}\n\nPregunta: {query}",
+                    },
                 ],
                 temperature=0.2,
                 max_tokens=500,
             )
             return response.choices[0].message.content
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return f"[LLM no disponible: {e}] Usando respuesta basada en contexto recuperado."
 
     def generate_without_llm(self, query: str, context: str) -> str:
@@ -78,10 +88,16 @@ class SimpleRAG:
         scored.sort(key=lambda x: x[0], reverse=True)
         relevant = [s for _, s in scored[:3] if s]
 
-        return f"Documentos relevantes encontrados:\n" + "\n".join(f"- {s}." for s in relevant)
+        return "Documentos relevantes encontrados:\n" + "\n".join(
+            f"- {s}." for s in relevant
+        )
 
 
-def run_rag_analysis(data_dir: Path = Path("data"), output_dir: Path = Path("data/export"), queries: list[str] = None) -> dict:
+def run_rag_analysis(
+    data_dir: Path = Path("data"),
+    output_dir: Path = Path("data/export"),
+    queries: list[str] | None = None,
+) -> dict:
     """
     Análisis RAG sobre documentos geopolíticos.
 
@@ -107,7 +123,7 @@ def run_rag_analysis(data_dir: Path = Path("data"), output_dir: Path = Path("dat
         text = tf.read_text(encoding="utf-8", errors="ignore")
         words = text.split()
         for i in range(0, len(words), 500):
-            chunk = " ".join(words[i:i+500])
+            chunk = " ".join(words[i : i + 500])
             if len(chunk.strip()) > 100:
                 documents.append(chunk)
 
@@ -121,7 +137,11 @@ def run_rag_analysis(data_dir: Path = Path("data"), output_dir: Path = Path("dat
     rag.ingest(documents)
 
     has_llm = os.environ.get("OPENAI_API_KEY", "") != ""
-    results = {"method": "openai" if has_llm else "tfidf_extractive", "n_documents": len(documents), "answers": []}
+    results = {
+        "method": "openai" if has_llm else "tfidf_extractive",
+        "n_documents": len(documents),
+        "answers": [],
+    }
 
     for q in queries:
         context_docs = rag.retrieve(q, top_k=3)
@@ -132,12 +152,14 @@ def run_rag_analysis(data_dir: Path = Path("data"), output_dir: Path = Path("dat
         else:
             answer = rag.generate_without_llm(q, context)
 
-        results["answers"].append({
-            "query": q,
-            "answer": answer[:500],
-            "n_context_docs": len(context_docs),
-            "method": "openai" if has_llm else "extractive",
-        })
+        results["answers"].append(
+            {
+                "query": q,
+                "answer": answer[:500],
+                "n_context_docs": len(context_docs),
+                "method": "openai" if has_llm else "extractive",
+            }
+        )
         print(f"[RAG] Q: {q[:60]}... -> {len(context_docs)} docs recuperados")
 
     output_dir.mkdir(parents=True, exist_ok=True)

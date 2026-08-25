@@ -190,7 +190,10 @@ def download_pdf(url: str, dest: Path, retries: int = 2) -> bool:
     for attempt in range(retries + 1):
         try:
             resp = requests.get(url, headers=HEADERS, timeout=30, verify=False)
-            if resp.status_code == 200 and "pdf" in resp.headers.get("Content-Type", "").lower():
+            if (
+                resp.status_code == 200
+                and "pdf" in resp.headers.get("Content-Type", "").lower()
+            ):
                 dest.write_bytes(resp.content)
                 return True
             if resp.status_code == 200 and len(resp.content) > 1000:
@@ -212,7 +215,7 @@ def extract_text_from_pdf(pdf_path: Path) -> str:
                 text = page.extract_text()
                 if text:
                     pages_text.append(text)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"  [WARN] pdfplumber failed for {pdf_path.name}: {exc}")
         return ""
     return "\n\n".join(pages_text)
@@ -230,7 +233,9 @@ def save_speech_json(speech: dict, text: str, output_dir: Path) -> None:
         "text_length": len(text),
     }
     json_path = output_dir / speech["filename"].replace(".pdf", ".json")
-    json_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+    json_path.write_text(
+        json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
 
 def main() -> None:

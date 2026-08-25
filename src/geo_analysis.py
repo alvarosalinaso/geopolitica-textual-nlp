@@ -1,12 +1,14 @@
 """
 Análisis geoespacial con Folium — Mapa interactivo de entidades geopolíticas.
 """
+
 import json
 from pathlib import Path
 
 try:
     import folium
     from folium.plugins import HeatMap, MarkerCluster
+
     FOLIUM_AVAILABLE = True
 except ImportError:
     FOLIUM_AVAILABLE = False
@@ -32,10 +34,12 @@ ENTITY_COORDS = {
 }
 
 
-def run_geo_analysis(data_dir: Path = Path("data/export"), output_dir: Path = Path("data/export")) -> dict:
+def run_geo_analysis(
+    data_dir: Path = Path("data/export"), output_dir: Path = Path("data/export")
+) -> dict:
     """
     Genera mapa interactivo Folium de entidades geopolíticas.
-    
+
     Returns:
         dict con estadísticas y path del mapa
     """
@@ -46,7 +50,9 @@ def run_geo_analysis(data_dir: Path = Path("data/export"), output_dir: Path = Pa
     # Load NER data
     ner_file = data_dir / "ner_entities.json"
     if not ner_file.exists():
-        print("[GEO] ner_entities.json no encontrado — ejecutar ner_analysis.py primero")
+        print(
+            "[GEO] ner_entities.json no encontrado — ejecutar ner_analysis.py primero"
+        )
         return {}
 
     with open(ner_file, encoding="utf-8") as f:
@@ -55,7 +61,9 @@ def run_geo_analysis(data_dir: Path = Path("data/export"), output_dir: Path = Pa
     entities = data.get("top_entities", [])
 
     # Create map centered on Chile
-    m = folium.Map(location=[-33.4489, -70.6693], zoom_start=3, tiles="CartoDB dark_matter")
+    m = folium.Map(
+        location=[-33.4489, -70.6693], zoom_start=3, tiles="CartoDB dark_matter"
+    )
 
     # Add markers for each entity
     marker_cluster = MarkerCluster().add_to(m)
@@ -66,17 +74,27 @@ def run_geo_analysis(data_dir: Path = Path("data/export"), output_dir: Path = Pa
         # Try exact match, then partial
         coords = ENTITY_COORDS.get(name)
         if not coords:
-            for key in ENTITY_COORDS:
+            for key, value in ENTITY_COORDS.items():
                 if key.lower() in name.lower() or name.lower() in key.lower():
-                    coords = ENTITY_COORDS[key]
+                    coords = value
                     break
 
         if coords:
             folium.Marker(
                 location=coords,
-                popup=folium.Popup(f"<b>{name}</b><br>Tipo: {ent['label']}<br>Frecuencia: {ent['count']}", max_width=200),
+                popup=folium.Popup(
+                    f"<b>{name}</b><br>Tipo: {ent['label']}<br>Frecuencia: {ent['count']}",
+                    max_width=200,
+                ),
                 tooltip=name,
-                icon=folium.Icon(color="red" if ent["count"] > 100 else "orange" if ent["count"] > 50 else "blue", icon="info-sign"),
+                icon=folium.Icon(
+                    color="red"
+                    if ent["count"] > 100
+                    else "orange"
+                    if ent["count"] > 50
+                    else "blue",
+                    icon="info-sign",
+                ),
             ).add_to(marker_cluster)
             entities_plotted += 1
 
@@ -86,9 +104,9 @@ def run_geo_analysis(data_dir: Path = Path("data/export"), output_dir: Path = Pa
         name = ent["entity"]
         coords = ENTITY_COORDS.get(name)
         if not coords:
-            for key in ENTITY_COORDS:
+            for key, value in ENTITY_COORDS.items():
                 if key.lower() in name.lower():
-                    coords = ENTITY_COORDS[key]
+                    coords = value
                     break
         if coords:
             heat_data.append([coords[0], coords[1], ent["count"]])
@@ -105,7 +123,9 @@ def run_geo_analysis(data_dir: Path = Path("data/export"), output_dir: Path = Pa
         "entities_plotted": entities_plotted,
         "total_entities": len(entities),
         "map_file": str(map_file),
-        "unique_locations": len(set(e["entity"] for e in entities if any(k.lower() in e["entity"].lower() for k in ENTITY_COORDS))),
+        "unique_locations": len(
+            {e["entity"] for e in entities if any(k.lower() in e["entity"].lower() for k in ENTITY_COORDS)}
+        ),
     }
 
     print(f"[GEO] Mapa generado: {map_file}")
