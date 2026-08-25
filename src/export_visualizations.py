@@ -8,6 +8,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.corpus_processor import GeopoliticalExtractor
 from src.ner_analysis import run_ner_analysis
 from src.sentiment_analysis import run_sentiment_analysis
+from src.geo_analysis import run_geo_analysis
+from src.rag_analysis import run_rag_analysis
 
 # Diccionario de Geocodificación Estática (mismo que en app_mapas.py)
 GEO_DB = {
@@ -248,6 +250,16 @@ def main():
     sentiment_results = run_sentiment_analysis(data_dir=Path("data"), output_dir=Path(export_dir))
     if sentiment_results:
         print(f"[✓] Sentimiento completado: {sentiment_results['n_documents']} documentos analizados")
+
+    print("\n[→] Generando mapa geoespacial Folium...")
+    geo_results = run_geo_analysis(data_dir=Path("data/export"), output_dir=Path(export_dir))
+    if geo_results:
+        print(f"[✓] Mapa geoespacial completado: {geo_results['entities_plotted']} entidades plotteadas")
+
+    print("\n[→] Ejecutando análisis RAG...")
+    rag_results = run_rag_analysis(data_dir=Path("data"), output_dir=Path(export_dir))
+    if rag_results:
+        print(f"[✓] RAG completado: {len(rag_results.get('answers', []))} consultas procesadas")
 
     print("\n" + "=" * 60)
     print("  ¡Exportación completada!")

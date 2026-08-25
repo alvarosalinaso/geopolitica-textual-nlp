@@ -26,6 +26,8 @@ El proyecto aborda dos preguntas centrales:
 
 - **P3: Sentimiento geopolítico en discursos políticos.** ¿Cuál es la distribución de sentimientos (positivo, neutral, negativo) en los discursos geopolíticos analizados? El pipeline incluye análisis de sentimiento con OpenAI API o fallback lexicon-based (TextBlob) para cuantificar la carga emocional del discurso.
 
+- **P4: Consultas RAG sobre el corpus.** Mediante Retrieval-Augmented Generation (RAG), el sistema recupera los fragmentos más relevantes del corpus y genera respuestas contextuales usando TF-IDF + OpenAI o extractive fallback.
+
 La hipotesis operativa es que la distribucion de entidades GPE en el discurso politico refleja de forma empirica las prioridades reales de inversion y atencion territorial, independientemente del enunciado oficial de politicas de descentralizacion.
 
 ---
@@ -200,6 +202,9 @@ python src/export_visualizations.py
 
 # Ejecutar análisis de sentimiento (incluido en export_visualizations.py)
 python src/sentiment_analysis.py
+
+# Ejecutar análisis RAG sobre documentos del corpus
+python src/rag_analysis.py
 ```
 
 ### Estructura del Repositorio
@@ -210,6 +215,8 @@ geopolitica-textual-nlp/
 │   ├── corpus_processor.py       # Pipeline ETL + NER (spaCy)
 │   ├── ner_analysis.py           # NER ampliado (ORG, PERSON, NORP)
 │   ├── sentiment_analysis.py     # Análisis de sentimiento (OpenAI/TextBlob)
+│   ├── rag_analysis.py           # RAG: retrieval TF-IDF + generación con LLM
+│   ├── geo_analysis.py           # Mapa interactivo Folium (geoespacial)
 │   └── export_visualizations.py  # Exportacion CSV multi-plataforma
 ├── data/
 │   ├── sample_speeches.csv       # Corpus de discursos historicos

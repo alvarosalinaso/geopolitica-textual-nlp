@@ -11,3 +11,4 @@ networkx>=3.2
 gensim>=4.3.0
 textblob>=0.17.0
 openai>=1.0.0
+scikit-learn>=1.4.0
