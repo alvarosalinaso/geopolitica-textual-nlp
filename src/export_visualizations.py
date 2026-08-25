@@ -1,10 +1,12 @@
 import os
 import sys
+from pathlib import Path
 
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.corpus_processor import GeopoliticalExtractor
+from src.ner_analysis import run_ner_analysis
 
 # Diccionario de Geocodificación Estática (mismo que en app_mapas.py)
 GEO_DB = {
@@ -235,6 +237,11 @@ def main():
 
     print("\n[→] Generando snippets de incrustación...")
     generate_embed_snippets(export_dir)
+
+    print("\n[→] Ejecutando NER ampliado (ORG, PERSON, NORP)...")
+    ner_results = run_ner_analysis(data_dir=Path("data"), output_dir=Path(export_dir))
+    if ner_results:
+        print(f"[✓] NER completado: {ner_results['total']} entidades totales")
 
     print("\n" + "=" * 60)
     print("  ¡Exportación completada!")

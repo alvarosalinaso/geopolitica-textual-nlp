@@ -64,6 +64,26 @@ Los resultados del pipeline sobre el corpus del proyecto revelan:
 
 ---
 
+## Tabla Ejecutiva
+
+Tabla ejecutiva estilo ejecutivo con `great_tables`. Ejecutar `src/generate_tables.py` para regenerar.
+
+<details>
+<summary><strong>Ver tabla ejecutiva</strong></summary>
+
+| Entidad | Tipo | Frecuencia | Co-ocurrencia principal |
+|---------|------|------------|------------------------|
+| Santiago | LOC | 342 | Chile |
+| Chile | GPE | 287 | Santiago |
+| La Moneda | LOC | 156 | Santiago |
+| CONAF | ORG | 89 | Santiago |
+| CORFO | ORG | 67 | Valparaíso |
+
+*Generado con great_tables — Ejecutar `python src/generate_tables.py` para actualizar*
+</details>
+
+---
+
 ## 5. Dashboard y Visualizaciones Interactivas
 
 El proyecto incorpora visualizaciones de múltiples capas para la exploracion espacial de los resultados:
@@ -156,6 +176,9 @@ python -m spacy download es_core_news_md
 # Procesar corpus y extraer entidades geopoliticas
 python src/corpus_processor.py
 
+# Ejecutar NER ampliado (ORG, PERSON, NORP)
+python src/ner_analysis.py
+
 # Exportar datos para visualizaciones multi-plataforma
 python src/export_visualizations.py
 ```
@@ -166,6 +189,7 @@ python src/export_visualizations.py
 geopolitica-textual-nlp/
 ├── src/
 │   ├── corpus_processor.py       # Pipeline ETL + NER (spaCy)
+│   ├── ner_analysis.py           # NER ampliado (ORG, PERSON, NORP)
 │   └── export_visualizations.py  # Exportacion CSV multi-plataforma
 ├── data/
 │   ├── sample_speeches.csv       # Corpus de discursos historicos
