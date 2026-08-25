@@ -143,6 +143,20 @@ Interactividad multinivel para exploración de datos y presentación ejecutiva.
 
 ---
 
+## Recomendación Ejecutiva
+
+- Santiago concentra 342 menciones (42% del total)
+- Diversificar referencias geográficas en discursos
+- Fortalecer narrativa regional (Valparaíso, Concepción)
+
+| Prioridad | Acción | Impacto esperado |
+|-----------|--------|-----------------|
+| Alta | Incluir referencias regionales en próximos discursos | Mejor percepción de representatividad |
+| Media | Crear base de datos de entidades geopolíticas recurrentes | Automatizar análisis futuros |
+| Baja | Publicar hallazgos en revista académica | Posicionamiento como experto en análisis textual |
+
+---
+
 ## 6. Reproducibilidad y Entorno Tecnico
 
 ### Prerrequisitos
