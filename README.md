@@ -24,6 +24,8 @@ El proyecto aborda dos preguntas centrales:
 
 - **P2: Equidad territorial y transicion del foco economico.** De que manera el interes economico nacional se desplaza espacialmente a lo largo de las decadas? Identificamos la transicion desde un foco agropecuario hacia polos mineros e industriales en el debate legislativo, cartografiando los periodos exactos de estos desplazamientos.
 
+- **P3: Sentimiento geopolítico en discursos políticos.** ¿Cuál es la distribución de sentimientos (positivo, neutral, negativo) en los discursos geopolíticos analizados? El pipeline incluye análisis de sentimiento con OpenAI API o fallback lexicon-based (TextBlob) para cuantificar la carga emocional del discurso.
+
 La hipotesis operativa es que la distribucion de entidades GPE en el discurso politico refleja de forma empirica las prioridades reales de inversion y atencion territorial, independientemente del enunciado oficial de politicas de descentralizacion.
 
 ---
@@ -195,6 +197,9 @@ python src/ner_analysis.py
 
 # Exportar datos para visualizaciones multi-plataforma
 python src/export_visualizations.py
+
+# Ejecutar análisis de sentimiento (incluido en export_visualizations.py)
+python src/sentiment_analysis.py
 ```
 
 ### Estructura del Repositorio
@@ -204,6 +209,7 @@ geopolitica-textual-nlp/
 ├── src/
 │   ├── corpus_processor.py       # Pipeline ETL + NER (spaCy)
 │   ├── ner_analysis.py           # NER ampliado (ORG, PERSON, NORP)
+│   ├── sentiment_analysis.py     # Análisis de sentimiento (OpenAI/TextBlob)
 │   └── export_visualizations.py  # Exportacion CSV multi-plataforma
 ├── data/
 │   ├── sample_speeches.csv       # Corpus de discursos historicos

@@ -7,6 +7,7 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.corpus_processor import GeopoliticalExtractor
 from src.ner_analysis import run_ner_analysis
+from src.sentiment_analysis import run_sentiment_analysis
 
 # Diccionario de Geocodificación Estática (mismo que en app_mapas.py)
 GEO_DB = {
@@ -242,6 +243,11 @@ def main():
     ner_results = run_ner_analysis(data_dir=Path("data"), output_dir=Path(export_dir))
     if ner_results:
         print(f"[✓] NER completado: {ner_results['total']} entidades totales")
+
+    print("\n[→] Ejecutando análisis de sentimiento...")
+    sentiment_results = run_sentiment_analysis(data_dir=Path("data"), output_dir=Path(export_dir))
+    if sentiment_results:
+        print(f"[✓] Sentimiento completado: {sentiment_results['n_documents']} documentos analizados")
 
     print("\n" + "=" * 60)
     print("  ¡Exportación completada!")
