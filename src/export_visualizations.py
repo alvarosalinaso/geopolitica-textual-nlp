@@ -212,7 +212,9 @@ def main():
     print("=" * 60)
 
     export_dir = ensure_export_dir()
-    dataset_path = os.path.join("data", "sample_speeches.csv")
+    dataset_path = os.path.join("data", "processed", "speeches.csv")
+    if not os.path.exists(dataset_path):
+        dataset_path = os.path.join("data", "sample_speeches.csv")
 
     if not os.path.exists(dataset_path):
         print(f"[✗] No se encontró el dataset: {dataset_path}")

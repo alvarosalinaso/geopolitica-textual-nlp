@@ -58,7 +58,9 @@ class GeopoliticalExtractor:
 if __name__ == "__main__":
     # Testeo local aislado
     extractor = GeopoliticalExtractor()
-    test_path = os.path.join("data", "sample_speeches.csv")
+    test_path = os.path.join("data", "processed", "speeches.csv")
+    if not os.path.exists(test_path):
+        test_path = os.path.join("data", "sample_speeches.csv")
     if os.path.exists(test_path):
         resultados = extractor.process_corpus(test_path)
         print("--- Entidades Geopolíticas Extraídas ---")

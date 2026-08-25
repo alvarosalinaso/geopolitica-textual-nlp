@@ -12,6 +12,12 @@ try:
 except ImportError:
     SPACY_AVAILABLE = False
 
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+
 
 def run_ner_analysis(data_dir: Path = Path("data"), output_dir: Path = Path("data/export")) -> dict:
     """
@@ -30,13 +36,38 @@ def run_ner_analysis(data_dir: Path = Path("data"), output_dir: Path = Path("dat
         print("[NER] Modelo es_core_news_sm no encontrado. Ejecuta: python -m spacy download es_core_news_sm")
         return {}
 
-    text_files = list(data_dir.rglob("*.txt")) + list(data_dir.rglob("*.md"))
-    if not text_files:
-        print("[NER] No se encontraron archivos de texto en data/")
-        return {}
-
     all_entities = []
 
+    csv_path = data_dir / "processed" / "speeches.csv"
+    fallback_csv = data_dir / "sample_speeches.csv"
+    if PANDAS_AVAILABLE and csv_path.exists():
+        df = pd.read_csv(csv_path)
+        for _, row in df.iterrows():
+            text = str(row.get("text", ""))
+            source = str(row.get("speaker", "")) + " " + str(row.get("year", ""))
+            doc = nlp(text[:100000])
+            for ent in doc.ents:
+                if ent.label_ in ("LOC", "GPE", "ORG", "PERSON", "NORP"):
+                    all_entities.append({
+                        "text": ent.text.strip(),
+                        "label": ent.label_,
+                        "source_file": source.strip(),
+                    })
+    elif PANDAS_AVAILABLE and fallback_csv.exists():
+        df = pd.read_csv(fallback_csv)
+        for _, row in df.iterrows():
+            text = str(row.get("text", ""))
+            source = str(row.get("speaker", "")) + " " + str(row.get("year", ""))
+            doc = nlp(text[:100000])
+            for ent in doc.ents:
+                if ent.label_ in ("LOC", "GPE", "ORG", "PERSON", "NORP"):
+                    all_entities.append({
+                        "text": ent.text.strip(),
+                        "label": ent.label_,
+                        "source_file": source.strip(),
+                    })
+
+    text_files = list(data_dir.rglob("*.txt")) + list(data_dir.rglob("*.md"))
     for tf in text_files:
         text = tf.read_text(encoding="utf-8", errors="ignore")
         doc = nlp(text[:100000])

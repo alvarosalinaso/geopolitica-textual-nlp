@@ -75,16 +75,30 @@ def run_sentiment_analysis(data_dir: Path = Path("data"), output_dir: Path = Pat
     Returns:
         dict con distribución de sentimientos y estadísticas
     """
-    # Find text files
-    text_files = list(data_dir.rglob("*.txt")) + list(data_dir.rglob("*.md"))
-    if not text_files:
-        print("[SENTIMENT] No text files found in data/")
-        return {}
-    
-    # Read texts
     texts = []
     sources = []
-    for tf in text_files[:20]:  # Limit to 20 files
+
+    csv_path = data_dir / "processed" / "speeches.csv"
+    fallback_csv = data_dir / "sample_speeches.csv"
+    if PANDAS_AVAILABLE and csv_path.exists():
+        df = pd.read_csv(csv_path)
+        for _, row in df.iterrows():
+            text = str(row.get("text", ""))
+            source = str(row.get("speaker", "")) + " " + str(row.get("year", ""))
+            if len(text.strip()) > 100:
+                texts.append(text)
+                sources.append(source.strip())
+    elif PANDAS_AVAILABLE and fallback_csv.exists():
+        df = pd.read_csv(fallback_csv)
+        for _, row in df.iterrows():
+            text = str(row.get("text", ""))
+            source = str(row.get("speaker", "")) + " " + str(row.get("year", ""))
+            if len(text.strip()) > 100:
+                texts.append(text)
+                sources.append(source.strip())
+
+    text_files = list(data_dir.rglob("*.txt")) + list(data_dir.rglob("*.md"))
+    for tf in text_files[:20]:
         text = tf.read_text(encoding="utf-8", errors="ignore")
         if len(text.strip()) > 100:
             texts.append(text)
