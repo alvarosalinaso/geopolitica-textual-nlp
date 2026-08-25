@@ -261,6 +261,18 @@ def main():
     if rag_results:
         print(f"[✓] RAG completado: {len(rag_results.get('answers', []))} consultas procesadas")
 
+    # Statistical tests
+    from statistical_tests import run_statistical_tests
+    run_statistical_tests()
+
+    # Generate executive tables
+    from generate_tables import generate as generate_exec_tables
+    generate_exec_tables()
+
+    # Generate paper report
+    from generate_report import generate_report
+    generate_report()
+
     print("\n" + "=" * 60)
     print("  ¡Exportación completada!")
     print(f"  Archivos generados en: {export_dir}")
