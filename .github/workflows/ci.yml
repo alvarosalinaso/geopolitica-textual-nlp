@@ -41,6 +41,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Compile Python sources
-        run: python -m compileall -q src app_mapas.py
+        run: python -m compileall -q src
       - name: Import distribution modules
         run: python -c "import sys; sys.path.insert(0, 'src'); import corpus_processor; print('corpus_processor OK')"
