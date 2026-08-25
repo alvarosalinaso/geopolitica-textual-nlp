@@ -107,5 +107,13 @@ geopolitica-textual-nlp/
 
 ---
 
+## Related projects
+
+- [Chile Geografía Histórica](https://github.com/alvarosalinaso/chile-geografia-historica) — Interactive map of Chile's historical geography
+- [Chilean Video Games](https://github.com/alvarosalinaso/chilean-videogames-analysis) — Market analysis of Chilean indie games
+- [Portfolio Web](https://github.com/alvarosalinaso/portfolio-web) — Dashboard with all projects
+
+---
+
 > **Álvaro Salinas Ortiz**
 > [LinkedIn](https://www.linkedin.com/in/alvaro-salinas-ortiz) | [Portfolio](https://alvarosalinaso.github.io/portfolio-web/)
