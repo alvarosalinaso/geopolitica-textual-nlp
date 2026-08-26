@@ -124,7 +124,11 @@ def run_geo_analysis(
         "total_entities": len(entities),
         "map_file": str(map_file),
         "unique_locations": len(
-            {e["entity"] for e in entities if any(k.lower() in e["entity"].lower() for k in ENTITY_COORDS)}
+            {
+                e["entity"]
+                for e in entities
+                if any(k.lower() in e["entity"].lower() for k in ENTITY_COORDS)
+            }
         ),
     }
 
