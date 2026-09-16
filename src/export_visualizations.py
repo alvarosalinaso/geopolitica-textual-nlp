@@ -1,15 +1,13 @@
 import os
-import sys
 from pathlib import Path
 
 import pandas as pd
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.corpus_processor import GeopoliticalExtractor
-from src.geo_analysis import run_geo_analysis
-from src.ner_analysis import run_ner_analysis
-from src.rag_analysis import run_rag_analysis
-from src.sentiment_analysis import run_sentiment_analysis
+from corpus_processor import GeopoliticalExtractor
+from geo_analysis import run_geo_analysis
+from ner_analysis import run_ner_analysis
+from rag_analysis import run_rag_analysis
+from sentiment_analysis import run_sentiment_analysis
 
 # Diccionario de Geocodificación Estática (mismo que en app_mapas.py)
 GEO_DB = {
