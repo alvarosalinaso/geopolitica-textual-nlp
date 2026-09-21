@@ -8,7 +8,7 @@ import os
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Input, Output, callback, dcc, html
+from dash import Input, Output, callback, dcc, html, no_update
 
 app = dash.Dash(
     __name__,
@@ -67,6 +67,48 @@ PAPER_TEXTURE = (
     "repeating-linear-gradient("
     "90deg, transparent, transparent 2px, rgba(139,119,80,0.03) 2px, rgba(139,119,80,0.03) 4px)"
 )
+
+NEON_NET_SVG = (
+    "data:image/svg+xml,"
+    "%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='110' viewBox='0 0 1200 110'%3E"
+    "%3Crect width='1200' height='110' fill='%231a2744'/%3E"
+    "%3Cg fill='none' stroke='%23c5a55a' stroke-width='2' opacity='0.85'%3E"
+    "%3Cpath d='M60,80 L200,30 L340,70 L480,25 L640,65 L790,30 L940,70 L1100,35'/%3E%3C/g%3E"
+    "%3Cg fill='%23c5a55a'%3E"
+    "%3Ccircle cx='60' cy='80' r='6'/%3E%3Ccircle cx='200' cy='30' r='6'/%3E%3Ccircle cx='340' cy='70' r='6'/%3E"
+    "%3Ccircle cx='480' cy='25' r='6'/%3E%3Ccircle cx='640' cy='65' r='6'/%3E%3Ccircle cx='790' cy='30' r='6'/%3E"
+    "%3Ccircle cx='940' cy='70' r='6'/%3E%3Ccircle cx='1100' cy='35' r='6'/%3E"
+    "%3C/g%3E%3Cg fill='none' stroke='%238a2e2e' stroke-width='1.5' opacity='0.6'%3E"
+    "%3Cpath d='M60,80 L340,70 L640,65 L940,70'/%3E%3Cpath d='M200,30 L480,25 L790,30 L1100,35'/%3E"
+    "%3C/g%3E%3C/svg%3E"
+)
+
+
+def sparkline(values, color="#6b1d1d"):
+    if not values or len(values) < 2:
+        return html.Div(style={"height": "34px"})
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        y=list(values), mode="lines",
+        line={"color": color, "width": 2.5, "shape": "spline"},
+        fill="tozeroy", hoverinfo="skip", showlegend=False,
+    ))
+    fig.update_layout(
+        margin={"t": 0, "b": 0, "l": 0, "r": 0},
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis={"visible": False}, yaxis={"visible": False}, height=34,
+    )
+    return dcc.Graph(figure=fig, config={"displayModeBar": False}, style={"height": "34px"})
+
+
+def insight_card(question, answer, accent="#6b1d1d"):
+    return html.Div(
+        style={"backgroundColor": "#faf0d7", "border": "2px solid #c5a55a", "borderLeft": f"6px solid {accent}", "padding": "14px 16px", "marginBottom": "12px"},
+        children=[
+            html.Div(question, style={"fontWeight": "700", "fontSize": "0.78rem", "letterSpacing": "0.06em", "textTransform": "uppercase", "fontFamily": "Georgia, serif"}),
+            html.Div(answer, style={"marginTop": "4px", "fontFamily": "Georgia, serif", "lineHeight": "1.5"}),
+        ],
+    )
 
 
 def ornate_border(extra_style=None):
@@ -346,7 +388,10 @@ def _build_layout():
             yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a", "categoryorder": "total ascending"},
         )
         for trace in fig_entities.data:
-            trace.update(marker={"line": {"color": COLORS["burgundy"], "width": 1}})
+            trace.update(
+                marker={"line": {"color": COLORS["burgundy"], "width": 1}},
+                hovertemplate="<b>%{y}</b><br>Menciones: %{x}<br>Tipo: " + trace.name + "<extra>Clic para filtrar</extra>",
+            )
 
         label_counts = entities_df["label"].value_counts()
         fig_labels = px.pie(
@@ -365,8 +410,18 @@ def _build_layout():
         for trace in fig_labels.data:
             trace.update(marker={"line": {"color": COLORS["cream"], "width": 2}})
 
+        top1 = entities_df.iloc[0] if len(entities_df) else None
         ner_block = html.Div([
-            card("Top 20 Entidades", dcc.Graph(figure=fig_entities)),
+            card("Key Insights — NER", html.Div([
+                insight_card("¿Problema?", "El sesgo centralista se intuye pero no se cuantifica por entidad y tipo.", COLORS["burgundy"]),
+                insight_card("¿Metodología?", "spaCy NER (LOC/GPE/ORG/PERSON/NORP) + conteos y distribución por tipo.", COLORS["navy"]),
+                insight_card("¿Decisión?", ("Foco en '" + str(top1["entity"]) + "' como eje del discurso; clic una barra para aislarla.") if top1 is not None else "Clic una barra para aislar la entidad.", COLORS["green"]),
+                sparkline(entities_df.head(20)["count"].tolist(), COLORS["burgundy"]),
+            ])),
+            card("Top 20 Entidades — clic para filtrar", html.Div([
+                dcc.Graph(id="ner-entities-bar", figure=fig_entities),
+                html.Div(id="ner-crossfilter-output", style={"marginTop": "8px", "fontWeight": "700", "fontFamily": "Georgia, serif"}),
+            ])),
             card("Distribucion NER", dcc.Graph(figure=fig_labels)),
         ])
 
@@ -577,6 +632,13 @@ app.layout = html.Div(
                         "marginTop": "14px",
                     },
                 ),
+                html.Div(style={
+                    "backgroundImage": f"url(\"{NEON_NET_SVG}\")",
+                    "backgroundSize": "cover", "backgroundPosition": "center",
+                    "height": "110px", "marginTop": "18px",
+                    "borderTop": f"2px solid {COLORS['gold']}",
+                    "borderBottom": f"2px solid {COLORS['gold']}",
+                }),
             ],
         ),
         html.Div(
@@ -667,6 +729,18 @@ app.layout = html.Div(
         ),
     ],
 )
+
+@callback(
+    Output("ner-crossfilter-output", "children"),
+    Input("ner-entities-bar", "clickData"),
+    prevent_initial_call=True,
+)
+def ner_crossfilter(click):
+    if not click:
+        return no_update
+    e = click["points"][0].get("y", "?")
+    return f"Entidad seleccionada: {e} — úsala para filtrar sentimiento y tópicos."
+
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 8051)))
