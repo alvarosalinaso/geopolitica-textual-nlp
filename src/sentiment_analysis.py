@@ -24,6 +24,9 @@ except ImportError:
 
 def analyze_sentiment_lexicon(texts: list[str]) -> list[dict]:
     """Análisis de sentimiento con TextBlob (lexicon-based)."""
+    if not TEXTBLOB_AVAILABLE:
+        print("[SENTIMENT] TextBlob no instalado. pip install textblob")
+        return []
     results = []
     for text in texts:
         blob = TextBlob(text[:5000])

@@ -4,6 +4,12 @@
 
 ---
 
+## ⚠️ AVISO IMPORTANTE: Datos Sintéticos
+
+> **Los discursos presidenciales en este proyecto son RESÚMENES SINTÉTICOS generados para demostración del pipeline NLP, no textos completos reales.** El corpus completo de Cuentas Públicas requiere licenciamiento de la Biblioteca del Congreso Nacional (BCN). Este proyecto demuestra la arquitectura del pipeline (NER → Sentiment → Topic → Geo) con datos de muestra.
+
+---
+
 ## What is this?
 
 EN: I was curious about how Chilean presidents talk about different regions over time. Does Santiago dominate presidential discourse? How has the economic focus shifted across decades? I built an NLP pipeline to find out.
@@ -26,7 +32,7 @@ ES: Me daba curiosidad cómo los presidentes chilenos hablan de distintas region
 
 ### 1. NER with spaCy
 
-Uses `es_core_news_md` (medium Spanish model with word vectors) for Named Entity Recognition. The medium model resolves ambiguities that the small model misses (e.g., "Santiago" as location vs. person name).
+Uses `es_core_news_sm` (small Spanish model) for Named Entity Recognition. The small model is faster and lighter for deployment while still providing accurate GPE/LOC entity recognition.
 
 ### 2. Corpus processing
 
@@ -42,11 +48,13 @@ OpenAI API or TextBlob fallback for sentiment scoring on each speech.
 
 ---
 
-## Key findings
+## Key findings (sobre datos sintéticos)
 
-- Santiago concentrates 342 mentions (42% of total) — strong centralist bias
-- Historical heatmaps show the shift from agricultural to mining/industrial focus
-- Entity co-occurrence patterns reveal geopolitical alliances in presidential discourse
+- Santiago concentra 342 menciones (42% del total) — sesgo centralista fuerte
+- Heatmaps históricos muestran el cambio de foco agrícola a minero/industrial
+- Patrones de co-ocurrencia de entidades revelan alianzas geopolíticas en discursos presidenciales
+
+> **Nota**: Estos hallazgos se basan en datos sintéticos de muestra. Con corpus real de BCN, los resultados variarán.
 
 ---
 
@@ -101,7 +109,7 @@ geopolitica-textual-nlp/
 │   └── export_visualizations.py  # CSV export for multi-platform viz
 ├── data/
 │   ├── raw/speeches/             # Source PDFs/HTML from BCN
-│   └── processed/speeches.csv    # Extracted speeches
+│   └── processed/speeches.csv    # Extracted speeches (synthetic samples)
 └── requirements.txt
 ```
 

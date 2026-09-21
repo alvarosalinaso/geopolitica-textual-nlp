@@ -189,7 +189,7 @@ def download_pdf(url: str, dest: Path, retries: int = 2) -> bool:
     """Download a PDF file. Returns True on success."""
     for attempt in range(retries + 1):
         try:
-            resp = requests.get(url, headers=HEADERS, timeout=30, verify=False)
+            resp = requests.get(url, headers=HEADERS, timeout=30)
             if (
                 resp.status_code == 200
                 and "pdf" in resp.headers.get("Content-Type", "").lower()

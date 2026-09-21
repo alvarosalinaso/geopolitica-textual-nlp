@@ -28,19 +28,30 @@ jobs:
       - name: Ruff format check
         run: ruff format --check .
 
-  build:
-    name: Smoke (compile + import)
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
+          cache: pip
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Compile Python sources
-        run: python -m compileall -q src
-      - name: Import distribution modules
-        run: python -c "import sys; sys.path.insert(0, 'src'); import corpus_processor; print('corpus_processor OK')"
+          pip install -r requirements-dev.txt
+          python -m spacy download es_core_news_sm
+      - name: Run tests
+        run: pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-py${{ matrix.python-version }}
+          path: coverage.xml

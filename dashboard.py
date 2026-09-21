@@ -58,7 +58,8 @@ def load_data():
     return data
 
 
-DATA = load_data()
+# DATA = load_data()  # Lazy load - call load_data() inside callbacks
+DATA = None
 
 PAPER_TEXTURE = (
     "repeating-linear-gradient("
@@ -269,6 +270,9 @@ WARM_BARS = [COLORS["gold"], COLORS["burgundy"], COLORS["green"], COLORS["navy"]
 
 
 def _build_layout():
+    global DATA
+    if DATA is None:
+        DATA = load_data()
     if "speeches" not in DATA:
         return card("Discurso NLP", html.P("No hay datos disponibles"))
 

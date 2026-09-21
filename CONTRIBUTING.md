@@ -1,36 +1,36 @@
 ﻿# Contribuir
 
-## Configuracion del entorno
+## Configuración del entorno
 
-`ash
+```bash
 pip install -r requirements.txt
 pip install pytest ruff
-`
+```
 
 ## Ejecutar tests
 
-`ash
+```bash
 pytest tests/ -v
-`
+```
 
-## Codigo
+## Código
 
 - Seguir PEP 8
-- Usar uff check . y uff format .
+- Usar `ruff check .` y `ruff format .`
 - Type hints donde sea posible
 
 ## Commits
 
-Usar convencion de commits:
-- eat: nueva funcionalidad
-- ix: correccion de bug
-- docs: documentacion
-- efactor: refactoring
-- 	est: tests
+Usar convención de commits:
+- `feat`: nueva funcionalidad
+- `fix`: corrección de bug
+- `docs`: documentación
+- `refactor`: refactoring
+- `test`: tests
 
 ## Pull Requests
 
 1. Crear branch desde main
 2. Hacer cambios
 3. Ejecutar tests
-4. Crear PR con descripcion clara
+4. Crear PR con descripción clara
