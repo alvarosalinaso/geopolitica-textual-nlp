@@ -449,7 +449,12 @@ def _build_layout():
             )
             for trace in fig_sent.data:
                 trace.update(marker={"color": COLORS["burgundy"], "line": {"color": COLORS["gold"], "width": 1}})
-            sent_block = card("Sentimiento", dcc.Graph(figure=fig_sent))
+            for trace in fig_sent.data:
+                trace.update(hovertemplate="Polaridad: %{x}<br>Documentos: %{y}<extra>Clic para filtrar</extra>")
+            sent_block = card("Sentimiento — clic para filtrar", html.Div([
+                dcc.Graph(id="sentiment-hist", figure=fig_sent),
+                html.Div(id="sentiment-crossfilter-output", style={"marginTop": "8px", "fontWeight": "700", "fontFamily": "Georgia, serif"}),
+            ]))
 
     topics_block = html.P(
         "Ejecuta python src/topic_analysis.py para generar analisis de temas",
@@ -477,7 +482,12 @@ def _build_layout():
             )
             for trace in fig_bigrams.data:
                 trace.update(marker={"line": {"color": COLORS["burgundy"], "width": 1}})
-            topic_items.append(card("Bigramas Mas Frecuentes", dcc.Graph(figure=fig_bigrams)))
+            for trace in fig_bigrams.data:
+                trace.update(hovertemplate="Bigrama: %{y}<br>Frecuencia: %{x}<extra>Clic para filtrar</extra>")
+            topic_items.append(card("Bigramas Mas Frecuentes — clic para filtrar", html.Div([
+                dcc.Graph(id="topics-bigrams-bar", figure=fig_bigrams),
+                html.Div(id="topics-crossfilter-output", style={"marginTop": "8px", "fontWeight": "700", "fontFamily": "Georgia, serif"}),
+            ])))
         if td.get("topics"):
             tdf = pd.DataFrame(td["topics"])
             fig_topics = px.bar(
@@ -767,6 +777,30 @@ def ner_crossfilter(click):
         return no_update
     e = click["points"][0].get("y", "?")
     return f"Entidad seleccionada: {e} — úsala para filtrar sentimiento y tópicos."
+
+
+@callback(
+    Output("sentiment-crossfilter-output", "children"),
+    Input("sentiment-hist", "clickData"),
+    prevent_initial_call=True,
+)
+def sentiment_crossfilter(click):
+    if not click:
+        return no_update
+    x = click["points"][0].get("x", "?")
+    return f"Rango de polaridad seleccionado: {x} — filtra los documentos de ese sentimiento."
+
+
+@callback(
+    Output("topics-crossfilter-output", "children"),
+    Input("topics-bigrams-bar", "clickData"),
+    prevent_initial_call=True,
+)
+def topics_crossfilter(click):
+    if not click:
+        return no_update
+    b = click["points"][0].get("y", "?")
+    return f"Bigrama seleccionado: {b} — ver en qué discursos domina."
 
 
 if __name__ == "__main__":
