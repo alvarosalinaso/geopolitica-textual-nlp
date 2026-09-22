@@ -2,10 +2,10 @@
 
 import pandas as pd
 import pytest
-from pathlib import Path
 
 try:
     from src.corpus_processor import GeopoliticalExtractor, create_sample_speeches
+
     SPACY_AVAILABLE = True
 except ImportError:
     SPACY_AVAILABLE = False
@@ -25,11 +25,16 @@ def test_process_corpus_returns_dataframe(tmp_path):
     if not SPACY_AVAILABLE:
         pytest.skip("spaCy not available")
     csv_path = tmp_path / "speeches.csv"
-    pd.DataFrame({
-        "year": [2020, 2021],
-        "speaker": ["Speaker A", "Speaker B"],
-        "text": ["El presidente de Chile visitó Argentina.", "Mención a Brasil y Perú."]
-    }).to_csv(csv_path, index=False)
+    pd.DataFrame(
+        {
+            "year": [2020, 2021],
+            "speaker": ["Speaker A", "Speaker B"],
+            "text": [
+                "El presidente de Chile visitó Argentina.",
+                "Mención a Brasil y Perú.",
+            ],
+        }
+    ).to_csv(csv_path, index=False)
 
     extractor = GeopoliticalExtractor("es_core_news_sm")
     if extractor.nlp is None:
@@ -68,10 +73,10 @@ def test_extract_entities_with_confidence():
 
     text = "El presidente de Chile visitó Argentina y se reunió con el presidente de Brasil en Santiago."
     entities = extractor.extract_entities_with_confidence(text)
-    
+
     assert isinstance(entities, list)
     assert len(entities) >= 3  # Chile, Argentina, Brasil, Santiago
-    
+
     for ent in entities:
         assert "text" in ent
         assert "label" in ent
@@ -87,7 +92,7 @@ def test_extract_entities_no_nlp():
         pytest.skip("spaCy not available")
     extractor = GeopoliticalExtractor("es_core_news_sm")
     extractor.nlp = None  # Force no NLP
-    
+
     entities = extractor.extract_entities_with_confidence("Chile y Argentina")
     assert entities == []
 
@@ -97,7 +102,7 @@ def test_create_sample_speeches():
     if not SPACY_AVAILABLE:
         pytest.skip("spaCy not available")
     df = create_sample_speeches()
-    
+
     assert isinstance(df, pd.DataFrame)
     assert len(df) >= 7
     assert "year" in df.columns

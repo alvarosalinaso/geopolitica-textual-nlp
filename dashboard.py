@@ -1,10 +1,10 @@
 """Dash Dashboard: Chilean Political Discourse NLP Analysis — Illuminated Manuscript Edition."""
 
 import json
+import os
 from pathlib import Path
 
 import dash
-import os
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -88,25 +88,57 @@ def sparkline(values, color="#6b1d1d"):
     if not values or len(values) < 2:
         return html.Div(style={"height": "34px"})
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        y=list(values), mode="lines",
-        line={"color": color, "width": 2.5, "shape": "spline"},
-        fill="tozeroy", hoverinfo="skip", showlegend=False,
-    ))
+    fig.add_trace(
+        go.Scatter(
+            y=list(values),
+            mode="lines",
+            line={"color": color, "width": 2.5, "shape": "spline"},
+            fill="tozeroy",
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
     fig.update_layout(
         margin={"t": 0, "b": 0, "l": 0, "r": 0},
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis={"visible": False}, yaxis={"visible": False}, height=34,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis={"visible": False},
+        yaxis={"visible": False},
+        height=34,
     )
-    return dcc.Graph(figure=fig, config={"displayModeBar": False}, style={"height": "34px"})
+    return dcc.Graph(
+        figure=fig, config={"displayModeBar": False}, style={"height": "34px"}
+    )
 
 
 def insight_card(question, answer, accent="#6b1d1d"):
     return html.Div(
-        style={"backgroundColor": "#faf0d7", "border": "2px solid #c5a55a", "borderLeft": f"6px solid {accent}", "padding": "14px 16px", "marginBottom": "12px"},
+        style={
+            "backgroundColor": "#faf0d7",
+            "border": "2px solid #c5a55a",
+            "borderLeft": f"6px solid {accent}",
+            "padding": "14px 16px",
+            "marginBottom": "12px",
+        },
         children=[
-            html.Div(question, style={"fontWeight": "700", "fontSize": "0.78rem", "letterSpacing": "0.06em", "textTransform": "uppercase", "fontFamily": "Georgia, serif"}),
-            html.Div(answer, style={"marginTop": "4px", "fontFamily": "Georgia, serif", "lineHeight": "1.5"}),
+            html.Div(
+                question,
+                style={
+                    "fontWeight": "700",
+                    "fontSize": "0.78rem",
+                    "letterSpacing": "0.06em",
+                    "textTransform": "uppercase",
+                    "fontFamily": "Georgia, serif",
+                },
+            ),
+            html.Div(
+                answer,
+                style={
+                    "marginTop": "4px",
+                    "fontFamily": "Georgia, serif",
+                    "lineHeight": "1.5",
+                },
+            ),
         ],
     )
 
@@ -160,7 +192,12 @@ def chapter_header(numeral, title):
         children=[
             html.Div(
                 "✦  ❋  ✦",
-                style={"color": COLORS["gold"], "fontSize": "0.8rem", "letterSpacing": "6px", "marginBottom": "8px"},
+                style={
+                    "color": COLORS["gold"],
+                    "fontSize": "0.8rem",
+                    "letterSpacing": "6px",
+                    "marginBottom": "8px",
+                },
             ),
             html.Div(
                 f"Caput {numeral}",
@@ -225,7 +262,8 @@ def card(title, children, color=None):
                     "letterSpacing": "1px",
                 },
             ),
-        ] + child_list,
+        ]
+        + child_list,
     )
 
 
@@ -244,13 +282,15 @@ def stat_row(stats):
                     "flex": "1",
                     "minWidth": "160px",
                     "backgroundColor": COLORS["parchment_light"],
-                    **ornate_border({
-                        "borderRadius": "4px",
-                        "padding": "22px 16px",
-                        "textAlign": "center",
-                        "boxShadow": "2px 2px 8px rgba(58,42,26,0.12)",
-                        "backgroundImage": PAPER_TEXTURE,
-                    }),
+                    **ornate_border(
+                        {
+                            "borderRadius": "4px",
+                            "padding": "22px 16px",
+                            "textAlign": "center",
+                            "boxShadow": "2px 2px 8px rgba(58,42,26,0.12)",
+                            "backgroundImage": PAPER_TEXTURE,
+                        }
+                    ),
                 },
                 children=[
                     html.Div(
@@ -290,7 +330,11 @@ PLOTLY_MANUSCRIPT_TEMPLATE = {
             "color": COLORS["text"],
         },
         "title": {
-            "font": {"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["burgundy"], "size": 16},
+            "font": {
+                "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+                "color": COLORS["burgundy"],
+                "size": 16,
+            },
             "x": 0.5,
             "xanchor": "center",
         },
@@ -319,15 +363,21 @@ def _build_layout():
         return card("Discurso NLP", html.P("No hay datos disponibles"))
 
     df = DATA["speeches"]
-    stats = stat_row([
-        (str(len(df)), "Discursos"),
-        (str(df["speaker"].nunique()), "Presidentes"),
-        (str(int(df["year"].min())) + "–" + str(int(df["year"].max())), "Periodo"),
-    ])
+    stats = stat_row(
+        [
+            (str(len(df)), "Discursos"),
+            (str(df["speaker"].nunique()), "Presidentes"),
+            (str(int(df["year"].min())) + "–" + str(int(df["year"].max())), "Periodo"),
+        ]
+    )
 
     fig_timeline = px.scatter(
-        df, x="year", y="speaker", color="speaker",
-        hover_data=["text"], title="Discursos por Ano y Presidente",
+        df,
+        x="year",
+        y="speaker",
+        color="speaker",
+        hover_data=["text"],
+        title="Discursos por Ano y Presidente",
     )
     fig_timeline.update_layout(
         template=PLOTLY_MANUSCRIPT_TEMPLATE,
@@ -335,46 +385,87 @@ def _build_layout():
         plot_bgcolor=COLORS["parchment"],
         showlegend=False,
         height=500,
-        font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-        title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+        font={
+            "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+            "color": COLORS["text"],
+        },
+        title={
+            "font": {
+                "family": "Georgia, 'Palatino Linotype",
+                "color": COLORS["burgundy"],
+                "size": 16,
+            },
+            "x": 0.5,
+        },
         xaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
         yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
     )
     for trace in fig_timeline.data:
-        trace.update(marker=dict(color=COLORS["burgundy"], size=10, symbol="diamond"))
+        trace.update(
+            marker={"color": COLORS["burgundy"], "size": 10, "symbol": "diamond"}
+        )
 
     df2 = df.copy()
     df2["word_count"] = df2["text"].str.split().str.len()
     fig_words = px.line(
-        df2, x="year", y="word_count", color="speaker",
-        title="Extension de Discursos (palabras)", markers=True,
+        df2,
+        x="year",
+        y="word_count",
+        color="speaker",
+        title="Extension de Discursos (palabras)",
+        markers=True,
     )
     fig_words.update_layout(
         template=PLOTLY_MANUSCRIPT_TEMPLATE,
         paper_bgcolor=COLORS["parchment_light"],
         plot_bgcolor=COLORS["parchment"],
         height=400,
-        font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-        title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+        font={
+            "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+            "color": COLORS["text"],
+        },
+        title={
+            "font": {
+                "family": "Georgia, 'Palatino Linotype",
+                "color": COLORS["burgundy"],
+                "size": 16,
+            },
+            "x": 0.5,
+        },
         xaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
         yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
-        legend={"font": {"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif"}},
+        legend={
+            "font": {"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif"}
+        },
     )
     for trace in fig_words.data:
         trace.update(
             line={"color": COLORS["burgundy"], "width": 2},
-            marker={"symbol": "diamond", "size": 8, "color": COLORS["gold"], "line": {"color": COLORS["burgundy"], "width": 1}},
+            marker={
+                "symbol": "diamond",
+                "size": 8,
+                "color": COLORS["gold"],
+                "line": {"color": COLORS["burgundy"], "width": 1},
+            },
         )
 
     ner_block = html.P(
         "Ejecuta python src/analyze_all.py para generar datos NER",
-        style={"fontStyle": "italic", "color": COLORS["text_muted"], "textAlign": "center"},
+        style={
+            "fontStyle": "italic",
+            "color": COLORS["text_muted"],
+            "textAlign": "center",
+        },
     )
     if "ner" in DATA and "top_entities" in DATA["ner"]:
         entities_df = pd.DataFrame(DATA["ner"]["top_entities"])
         fig_entities = px.bar(
-            entities_df.head(20), x="count", y="entity", color="label",
-            orientation="h", title="Top 20 Entidades Mas Mencionadas",
+            entities_df.head(20),
+            x="count",
+            y="entity",
+            color="label",
+            orientation="h",
+            title="Top 20 Entidades Mas Mencionadas",
             color_discrete_sequence=WARM_BARS,
         )
         fig_entities.update_layout(
@@ -382,58 +473,136 @@ def _build_layout():
             paper_bgcolor=COLORS["parchment_light"],
             plot_bgcolor=COLORS["parchment"],
             height=600,
-            font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-            title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+            font={
+                "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+                "color": COLORS["text"],
+            },
+            title={
+                "font": {
+                    "family": "Georgia, 'Palatino Linotype",
+                    "color": COLORS["burgundy"],
+                    "size": 16,
+                },
+                "x": 0.5,
+            },
             xaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
-            yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a", "categoryorder": "total ascending"},
+            yaxis={
+                "gridcolor": "#d4c9a8",
+                "zerolinecolor": "#c5a55a",
+                "categoryorder": "total ascending",
+            },
         )
         for trace in fig_entities.data:
             trace.update(
                 marker={"line": {"color": COLORS["burgundy"], "width": 1}},
-                hovertemplate="<b>%{y}</b><br>Menciones: %{x}<br>Tipo: " + trace.name + "<extra>Clic para filtrar</extra>",
+                hovertemplate="<b>%{y}</b><br>Menciones: %{x}<br>Tipo: "
+                + trace.name
+                + "<extra>Clic para filtrar</extra>",
             )
 
         label_counts = entities_df["label"].value_counts()
         fig_labels = px.pie(
-            values=label_counts.values, names=label_counts.index,
+            values=label_counts.values,
+            names=label_counts.index,
             title="Distribucion de Tipos de Entidad",
-            color_discrete_sequence=[COLORS["burgundy"], COLORS["gold"], COLORS["green"], COLORS["navy"]],
+            color_discrete_sequence=[
+                COLORS["burgundy"],
+                COLORS["gold"],
+                COLORS["green"],
+                COLORS["navy"],
+            ],
         )
         fig_labels.update_layout(
             template=PLOTLY_MANUSCRIPT_TEMPLATE,
             paper_bgcolor=COLORS["parchment_light"],
             plot_bgcolor=COLORS["parchment"],
             height=400,
-            font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-            title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+            font={
+                "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+                "color": COLORS["text"],
+            },
+            title={
+                "font": {
+                    "family": "Georgia, 'Palatino Linotype",
+                    "color": COLORS["burgundy"],
+                    "size": 16,
+                },
+                "x": 0.5,
+            },
         )
         for trace in fig_labels.data:
             trace.update(marker={"line": {"color": COLORS["cream"], "width": 2}})
 
         top1 = entities_df.iloc[0] if len(entities_df) else None
-        ner_block = html.Div([
-            card("Key Insights — NER", html.Div([
-                insight_card("¿Problema?", "El sesgo centralista se intuye pero no se cuantifica por entidad y tipo.", COLORS["burgundy"]),
-                insight_card("¿Metodología?", "spaCy NER (LOC/GPE/ORG/PERSON/NORP) + conteos y distribución por tipo.", COLORS["navy"]),
-                insight_card("¿Decisión?", ("Foco en '" + str(top1["entity"]) + "' como eje del discurso; clic una barra para aislarla.") if top1 is not None else "Clic una barra para aislar la entidad.", COLORS["green"]),
-                sparkline(entities_df.head(20)["count"].tolist(), COLORS["burgundy"]),
-            ])),
-            card("Top 20 Entidades — clic para filtrar", html.Div([
-                dcc.Graph(id="ner-entities-bar", figure=fig_entities),
-                html.Div(id="ner-crossfilter-output", style={"marginTop": "8px", "fontWeight": "700", "fontFamily": "Georgia, serif"}),
-            ])),
-            card("Distribucion NER", dcc.Graph(figure=fig_labels)),
-        ])
+        ner_block = html.Div(
+            [
+                card(
+                    "Key Insights — NER",
+                    html.Div(
+                        [
+                            insight_card(
+                                "¿Problema?",
+                                "El sesgo centralista se intuye pero no se cuantifica por entidad y tipo.",
+                                COLORS["burgundy"],
+                            ),
+                            insight_card(
+                                "¿Metodología?",
+                                "spaCy NER (LOC/GPE/ORG/PERSON/NORP) + conteos y distribución por tipo.",
+                                COLORS["navy"],
+                            ),
+                            insight_card(
+                                "¿Decisión?",
+                                (
+                                    "Foco en '"
+                                    + str(top1["entity"])
+                                    + "' como eje del discurso; clic una barra para aislarla."
+                                )
+                                if top1 is not None
+                                else "Clic una barra para aislar la entidad.",
+                                COLORS["green"],
+                            ),
+                            sparkline(
+                                entities_df.head(20)["count"].tolist(),
+                                COLORS["burgundy"],
+                            ),
+                        ]
+                    ),
+                ),
+                card(
+                    "Top 20 Entidades — clic para filtrar",
+                    html.Div(
+                        [
+                            dcc.Graph(id="ner-entities-bar", figure=fig_entities),
+                            html.Div(
+                                id="ner-crossfilter-output",
+                                style={
+                                    "marginTop": "8px",
+                                    "fontWeight": "700",
+                                    "fontFamily": "Georgia, serif",
+                                },
+                            ),
+                        ]
+                    ),
+                ),
+                card("Distribucion NER", dcc.Graph(figure=fig_labels)),
+            ]
+        )
 
     sent_block = html.P(
         "Ejecuta python src/analyze_all.py para generar analisis de sentimiento",
-        style={"fontStyle": "italic", "color": COLORS["text_muted"], "textAlign": "center"},
+        style={
+            "fontStyle": "italic",
+            "color": COLORS["text_muted"],
+            "textAlign": "center",
+        },
     )
     if "sentiment" in DATA and "per_document" in DATA["sentiment"]:
         sent_df = pd.DataFrame(DATA["sentiment"]["per_document"])
         if "polarity" in sent_df.columns:
             fig_sent = px.histogram(
-                sent_df, x="polarity", nbins=30,
+                sent_df,
+                x="polarity",
+                nbins=30,
                 title="Distribucion de Polaridad",
                 color_discrete_sequence=[COLORS["burgundy"]],
             )
@@ -442,23 +611,56 @@ def _build_layout():
                 paper_bgcolor=COLORS["parchment_light"],
                 plot_bgcolor=COLORS["parchment"],
                 height=400,
-                font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-                title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+                font={
+                    "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+                    "color": COLORS["text"],
+                },
+                title={
+                    "font": {
+                        "family": "Georgia, 'Palatino Linotype",
+                        "color": COLORS["burgundy"],
+                        "size": 16,
+                    },
+                    "x": 0.5,
+                },
                 xaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
                 yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
             )
             for trace in fig_sent.data:
-                trace.update(marker={"color": COLORS["burgundy"], "line": {"color": COLORS["gold"], "width": 1}})
+                trace.update(
+                    marker={
+                        "color": COLORS["burgundy"],
+                        "line": {"color": COLORS["gold"], "width": 1},
+                    }
+                )
             for trace in fig_sent.data:
-                trace.update(hovertemplate="Polaridad: %{x}<br>Documentos: %{y}<extra>Clic para filtrar</extra>")
-            sent_block = card("Sentimiento — clic para filtrar", html.Div([
-                dcc.Graph(id="sentiment-hist", figure=fig_sent),
-                html.Div(id="sentiment-crossfilter-output", style={"marginTop": "8px", "fontWeight": "700", "fontFamily": "Georgia, serif"}),
-            ]))
+                trace.update(
+                    hovertemplate="Polaridad: %{x}<br>Documentos: %{y}<extra>Clic para filtrar</extra>"
+                )
+            sent_block = card(
+                "Sentimiento — clic para filtrar",
+                html.Div(
+                    [
+                        dcc.Graph(id="sentiment-hist", figure=fig_sent),
+                        html.Div(
+                            id="sentiment-crossfilter-output",
+                            style={
+                                "marginTop": "8px",
+                                "fontWeight": "700",
+                                "fontFamily": "Georgia, serif",
+                            },
+                        ),
+                    ]
+                ),
+            )
 
     topics_block = html.P(
         "Ejecuta python src/topic_analysis.py para generar analisis de temas",
-        style={"fontStyle": "italic", "color": COLORS["text_muted"], "textAlign": "center"},
+        style={
+            "fontStyle": "italic",
+            "color": COLORS["text_muted"],
+            "textAlign": "center",
+        },
     )
     if "topics" in DATA:
         td = DATA["topics"]
@@ -466,7 +668,10 @@ def _build_layout():
         if td.get("bigrams"):
             bdf = pd.DataFrame(td["bigrams"][:20])
             fig_bigrams = px.bar(
-                bdf, x="count", y="bigram", orientation="h",
+                bdf,
+                x="count",
+                y="bigram",
+                orientation="h",
                 title="Top 20 Bigramas",
                 color_discrete_sequence=[COLORS["gold"]],
             )
@@ -475,23 +680,55 @@ def _build_layout():
                 paper_bgcolor=COLORS["parchment_light"],
                 plot_bgcolor=COLORS["parchment"],
                 height=500,
-                font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-                title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+                font={
+                    "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+                    "color": COLORS["text"],
+                },
+                title={
+                    "font": {
+                        "family": "Georgia, 'Palatino Linotype",
+                        "color": COLORS["burgundy"],
+                        "size": 16,
+                    },
+                    "x": 0.5,
+                },
                 xaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
-                yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a", "categoryorder": "total ascending"},
+                yaxis={
+                    "gridcolor": "#d4c9a8",
+                    "zerolinecolor": "#c5a55a",
+                    "categoryorder": "total ascending",
+                },
             )
             for trace in fig_bigrams.data:
                 trace.update(marker={"line": {"color": COLORS["burgundy"], "width": 1}})
             for trace in fig_bigrams.data:
-                trace.update(hovertemplate="Bigrama: %{y}<br>Frecuencia: %{x}<extra>Clic para filtrar</extra>")
-            topic_items.append(card("Bigramas Mas Frecuentes — clic para filtrar", html.Div([
-                dcc.Graph(id="topics-bigrams-bar", figure=fig_bigrams),
-                html.Div(id="topics-crossfilter-output", style={"marginTop": "8px", "fontWeight": "700", "fontFamily": "Georgia, serif"}),
-            ])))
+                trace.update(
+                    hovertemplate="Bigrama: %{y}<br>Frecuencia: %{x}<extra>Clic para filtrar</extra>"
+                )
+            topic_items.append(
+                card(
+                    "Bigramas Mas Frecuentes — clic para filtrar",
+                    html.Div(
+                        [
+                            dcc.Graph(id="topics-bigrams-bar", figure=fig_bigrams),
+                            html.Div(
+                                id="topics-crossfilter-output",
+                                style={
+                                    "marginTop": "8px",
+                                    "fontWeight": "700",
+                                    "fontFamily": "Georgia, serif",
+                                },
+                            ),
+                        ]
+                    ),
+                )
+            )
         if td.get("topics"):
             tdf = pd.DataFrame(td["topics"])
             fig_topics = px.bar(
-                tdf, x="topic_id", y="weight",
+                tdf,
+                x="topic_id",
+                y="weight",
                 title="Peso por Tema LDA",
                 color="topic_id",
                 color_continuous_scale=GOLD_BURGUNDY_SCALE,
@@ -501,11 +738,25 @@ def _build_layout():
                 paper_bgcolor=COLORS["parchment_light"],
                 plot_bgcolor=COLORS["parchment"],
                 height=350,
-                font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-                title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+                font={
+                    "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+                    "color": COLORS["text"],
+                },
+                title={
+                    "font": {
+                        "family": "Georgia, 'Palatino Linotype",
+                        "color": COLORS["burgundy"],
+                        "size": 16,
+                    },
+                    "x": 0.5,
+                },
                 xaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
                 yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
-                coloraxis_colorbar={"tickfont": {"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif"}},
+                coloraxis_colorbar={
+                    "tickfont": {
+                        "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif"
+                    }
+                },
             )
             topic_items.append(card("Temas LDA", dcc.Graph(figure=fig_topics)))
 
@@ -516,90 +767,179 @@ def _build_layout():
             if words_data:
                 wdf = pd.DataFrame(words_data)
                 fig_treemap = px.treemap(
-                    wdf, path=["topic", "word"],
+                    wdf,
+                    path=["topic", "word"],
                     title="Palabras por Tema",
                     color="topic",
-                    color_discrete_sequence=[COLORS["burgundy"], COLORS["gold"], COLORS["green"], COLORS["navy"]],
+                    color_discrete_sequence=[
+                        COLORS["burgundy"],
+                        COLORS["gold"],
+                        COLORS["green"],
+                        COLORS["navy"],
+                    ],
                 )
                 fig_treemap.update_layout(
                     template=PLOTLY_MANUSCRIPT_TEMPLATE,
                     paper_bgcolor=COLORS["parchment_light"],
                     plot_bgcolor=COLORS["parchment"],
                     height=450,
-                    font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-                    title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+                    font={
+                        "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+                        "color": COLORS["text"],
+                    },
+                    title={
+                        "font": {
+                            "family": "Georgia, 'Palatino Linotype",
+                            "color": COLORS["burgundy"],
+                            "size": 16,
+                        },
+                        "x": 0.5,
+                    },
                 )
-                topic_items.append(card("Palabras Clave por Tema", dcc.Graph(figure=fig_treemap)))
+                topic_items.append(
+                    card("Palabras Clave por Tema", dcc.Graph(figure=fig_treemap))
+                )
         if td.get("document_topics"):
             doc_df = pd.DataFrame(td["document_topics"])
-            if {"year", "topic", "weight"}.issubset(doc_df.columns) and not doc_df.empty:
+            if {"year", "topic", "weight"}.issubset(
+                doc_df.columns
+            ) and not doc_df.empty:
                 river = doc_df.groupby(["year", "topic"])["weight"].mean().reset_index()
                 fig_river = px.area(
-                    river, x="year", y="weight", color="topic",
+                    river,
+                    x="year",
+                    y="weight",
+                    color="topic",
                     title="Río de Temas — peso LDA por año (streamgraph)",
-                    color_discrete_sequence=[COLORS["burgundy"], COLORS["gold"], COLORS["green"], COLORS["navy"], "#8b4513"],
+                    color_discrete_sequence=[
+                        COLORS["burgundy"],
+                        COLORS["gold"],
+                        COLORS["green"],
+                        COLORS["navy"],
+                        "#8b4513",
+                    ],
                 )
                 fig_river.update_layout(
                     template=PLOTLY_MANUSCRIPT_TEMPLATE,
                     paper_bgcolor=COLORS["parchment_light"],
                     plot_bgcolor=COLORS["parchment"],
                     height=450,
-                    font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-                    title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
-                    xaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a", "title": "Año"},
-                    yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a", "title": "Peso medio"},
+                    font={
+                        "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+                        "color": COLORS["text"],
+                    },
+                    title={
+                        "font": {
+                            "family": "Georgia, 'Palatino Linotype",
+                            "color": COLORS["burgundy"],
+                            "size": 16,
+                        },
+                        "x": 0.5,
+                    },
+                    xaxis={
+                        "gridcolor": "#d4c9a8",
+                        "zerolinecolor": "#c5a55a",
+                        "title": "Año",
+                    },
+                    yaxis={
+                        "gridcolor": "#d4c9a8",
+                        "zerolinecolor": "#c5a55a",
+                        "title": "Peso medio",
+                    },
                 )
                 for trace in fig_river.data:
                     trace.update(
                         line={"shape": "spline", "width": 0},
                         hovertemplate="<b>Tema %{fullData.name}</b><br>Año: %{x}<br>Peso: %{y:.3f}<extra></extra>",
                     )
-                topic_items.append(card("Río de Temas en el Tiempo", html.Div([
-                    dcc.Graph(figure=fig_river),
-                    html.Div("Insight: las corrientes que crecen marcan el giro del discurso (paz → mercado → reconstrucción).",
-                             style={"fontStyle": "italic", "color": COLORS["text_muted"], "marginTop": "8px", "fontFamily": "Georgia, serif"}),
-                ])))
+                topic_items.append(
+                    card(
+                        "Río de Temas en el Tiempo",
+                        html.Div(
+                            [
+                                dcc.Graph(figure=fig_river),
+                                html.Div(
+                                    "Insight: las corrientes que crecen marcan el giro del discurso (paz → mercado → reconstrucción).",
+                                    style={
+                                        "fontStyle": "italic",
+                                        "color": COLORS["text_muted"],
+                                        "marginTop": "8px",
+                                        "fontFamily": "Georgia, serif",
+                                    },
+                                ),
+                            ]
+                        ),
+                    )
+                )
             pivot = doc_df.pivot_table(
-                index="speaker", columns="topic", values="weight",
-                aggfunc="mean", fill_value=0,
+                index="speaker",
+                columns="topic",
+                values="weight",
+                aggfunc="mean",
+                fill_value=0,
             )
             fig_heat = px.imshow(
                 pivot,
                 title="Distribucion de Temas por Presidente",
                 labels={"color": "Peso"},
                 aspect="auto",
-                color_continuous_scale=[COLORS["cream"], COLORS["gold"], COLORS["burgundy"]],
+                color_continuous_scale=[
+                    COLORS["cream"],
+                    COLORS["gold"],
+                    COLORS["burgundy"],
+                ],
             )
             fig_heat.update_layout(
                 template=PLOTLY_MANUSCRIPT_TEMPLATE,
                 paper_bgcolor=COLORS["parchment_light"],
                 plot_bgcolor=COLORS["parchment"],
                 height=500,
-                font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
-                title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+                font={
+                    "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif",
+                    "color": COLORS["text"],
+                },
+                title={
+                    "font": {
+                        "family": "Georgia, 'Palatino Linotype",
+                        "color": COLORS["burgundy"],
+                        "size": 16,
+                    },
+                    "x": 0.5,
+                },
                 xaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
                 yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a"},
-                coloraxis_colorbar={"tickfont": {"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif"}},
+                coloraxis_colorbar={
+                    "tickfont": {
+                        "family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif"
+                    }
+                },
             )
-            topic_items.append(card("Mapa de Calor: Temas por Presidente", dcc.Graph(figure=fig_heat)))
+            topic_items.append(
+                card("Mapa de Calor: Temas por Presidente", dcc.Graph(figure=fig_heat))
+            )
         if topic_items:
             topics_block = html.Div(topic_items)
 
-    return html.Div([
-        stats,
-        chapter_header("I", "Linea de Tiempo"),
-        card("Discursos a Traves de los Anos", [
-            dcc.Graph(figure=fig_timeline),
-            section_divider(),
-            dcc.Graph(figure=fig_words),
-        ]),
-        chapter_header("II", "Entidades NER"),
-        card("Entidades Nombradas", ner_block),
-        chapter_header("III", "Sentimiento"),
-        card("Analisis de Sentimiento", sent_block),
-        chapter_header("IV", "Analisis Tematico"),
-        card("Temas y Palabras Clave", topics_block),
-    ])
+    return html.Div(
+        [
+            stats,
+            chapter_header("I", "Linea de Tiempo"),
+            card(
+                "Discursos a Traves de los Anos",
+                [
+                    dcc.Graph(figure=fig_timeline),
+                    section_divider(),
+                    dcc.Graph(figure=fig_words),
+                ],
+            ),
+            chapter_header("II", "Entidades NER"),
+            card("Entidades Nombradas", ner_block),
+            chapter_header("III", "Sentimiento"),
+            card("Analisis de Sentimiento", sent_block),
+            chapter_header("IV", "Analisis Tematico"),
+            card("Temas y Palabras Clave", topics_block),
+        ]
+    )
 
 
 app.layout = html.Div(
@@ -669,13 +1009,17 @@ app.layout = html.Div(
                         "marginTop": "14px",
                     },
                 ),
-                html.Div(style={
-                    "backgroundImage": f"url(\"{NEON_NET_SVG}\")",
-                    "backgroundSize": "cover", "backgroundPosition": "center",
-                    "height": "110px", "marginTop": "18px",
-                    "borderTop": f"2px solid {COLORS['gold']}",
-                    "borderBottom": f"2px solid {COLORS['gold']}",
-                }),
+                html.Div(
+                    style={
+                        "backgroundImage": f'url("{NEON_NET_SVG}")',
+                        "backgroundSize": "cover",
+                        "backgroundPosition": "center",
+                        "height": "110px",
+                        "marginTop": "18px",
+                        "borderTop": f"2px solid {COLORS['gold']}",
+                        "borderBottom": f"2px solid {COLORS['gold']}",
+                    }
+                ),
             ],
         ),
         html.Div(
@@ -698,19 +1042,46 @@ app.layout = html.Div(
                     children=[
                         html.Div(
                             "❧",
-                            style={"position": "absolute", "top": "10px", "left": "14px", "color": COLORS["gold"], "fontSize": "1.1rem"},
+                            style={
+                                "position": "absolute",
+                                "top": "10px",
+                                "left": "14px",
+                                "color": COLORS["gold"],
+                                "fontSize": "1.1rem",
+                            },
                         ),
                         html.Div(
                             "❧",
-                            style={"position": "absolute", "top": "10px", "right": "14px", "color": COLORS["gold"], "fontSize": "1.1rem", "transform": "scaleX(-1)"},
+                            style={
+                                "position": "absolute",
+                                "top": "10px",
+                                "right": "14px",
+                                "color": COLORS["gold"],
+                                "fontSize": "1.1rem",
+                                "transform": "scaleX(-1)",
+                            },
                         ),
                         html.Div(
                             "❧",
-                            style={"position": "absolute", "bottom": "10px", "left": "14px", "color": COLORS["gold"], "fontSize": "1.1rem", "transform": "scaleY(-1)"},
+                            style={
+                                "position": "absolute",
+                                "bottom": "10px",
+                                "left": "14px",
+                                "color": COLORS["gold"],
+                                "fontSize": "1.1rem",
+                                "transform": "scaleY(-1)",
+                            },
                         ),
                         html.Div(
                             "❧",
-                            style={"position": "absolute", "bottom": "10px", "right": "14px", "color": COLORS["gold"], "fontSize": "1.1rem", "transform": "scale(-1,-1)"},
+                            style={
+                                "position": "absolute",
+                                "bottom": "10px",
+                                "right": "14px",
+                                "color": COLORS["gold"],
+                                "fontSize": "1.1rem",
+                                "transform": "scale(-1,-1)",
+                            },
                         ),
                         html.P(
                             "In Sapienza Veritas",
@@ -745,7 +1116,12 @@ app.layout = html.Div(
                     children=[
                         html.Div(
                             "✦  ❋  ✦",
-                            style={"color": COLORS["gold"], "fontSize": "0.9rem", "letterSpacing": "6px", "marginBottom": "10px"},
+                            style={
+                                "color": COLORS["gold"],
+                                "fontSize": "0.9rem",
+                                "letterSpacing": "6px",
+                                "marginBottom": "10px",
+                            },
                         ),
                         html.P(
                             "El Fin del Cuaderno",
@@ -758,7 +1134,11 @@ app.layout = html.Div(
                         ),
                         html.Div(
                             "❧",
-                            style={"color": COLORS["gold"], "fontSize": "1.2rem", "marginTop": "8px"},
+                            style={
+                                "color": COLORS["gold"],
+                                "fontSize": "1.2rem",
+                                "marginTop": "8px",
+                            },
                         ),
                     ],
                 ),
@@ -766,6 +1146,7 @@ app.layout = html.Div(
         ),
     ],
 )
+
 
 @callback(
     Output("ner-crossfilter-output", "children"),
@@ -804,4 +1185,4 @@ def topics_crossfilter(click):
 
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 8051)))
+    app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", "8051")))

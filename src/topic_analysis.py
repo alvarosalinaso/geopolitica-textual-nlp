@@ -16,11 +16,58 @@ def _clean(text):
     text = re.sub(r"[^a-záéíóúñü\s]", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
     stopwords = [
-        "de", "la", "el", "en", "y", "a", "que", "es", "se", "del", "los", "las",
-        "un", "una", "por", "con", "no", "para", "al", "lo", "como", "su", "más",
-        "este", "ha", "han", "han sido", "ha sido", "fue", "ser", "ha de", "sobre",
-        "todo", "entre", "desde", "sin", "pero", "muy", "ya", "o", "e", "ni", "le",
-        "les", "da", "dos", "cada", "uno", "otra", "otro", "otros", "otras",
+        "de",
+        "la",
+        "el",
+        "en",
+        "y",
+        "a",
+        "que",
+        "es",
+        "se",
+        "del",
+        "los",
+        "las",
+        "un",
+        "una",
+        "por",
+        "con",
+        "no",
+        "para",
+        "al",
+        "lo",
+        "como",
+        "su",
+        "más",
+        "este",
+        "ha",
+        "han",
+        "han sido",
+        "ha sido",
+        "fue",
+        "ser",
+        "ha de",
+        "sobre",
+        "todo",
+        "entre",
+        "desde",
+        "sin",
+        "pero",
+        "muy",
+        "ya",
+        "o",
+        "e",
+        "ni",
+        "le",
+        "les",
+        "da",
+        "dos",
+        "cada",
+        "uno",
+        "otra",
+        "otro",
+        "otros",
+        "otras",
     ]
     words = [w for w in text.split() if w not in stopwords and len(w) > 2]
     return " ".join(words)
@@ -58,17 +105,25 @@ def analyze_topics(n_topics=5):
     topics = []
     for idx, topic in enumerate(lda.components_):
         top_words = [feature_names[i] for i in topic.argsort()[-10:][::-1]]
-        topics.append({"topic_id": idx, "words": top_words, "weight": round(float(topic.sum()), 2)})
+        topics.append(
+            {
+                "topic_id": idx,
+                "words": top_words,
+                "weight": round(float(topic.sum()), 2),
+            }
+        )
 
     doc_topic_list = []
     for i, row in df.iterrows():
         dominant = int(doc_topics[i].argmax())
-        doc_topic_list.append({
-            "year": int(row["year"]),
-            "speaker": row["speaker"],
-            "topic": dominant,
-            "weight": round(float(doc_topics[i][dominant]), 3),
-        })
+        doc_topic_list.append(
+            {
+                "year": int(row["year"]),
+                "speaker": row["speaker"],
+                "topic": dominant,
+                "weight": round(float(doc_topics[i][dominant]), 3),
+            }
+        )
 
     result = {
         "total_documents": len(df),

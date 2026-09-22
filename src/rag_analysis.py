@@ -3,6 +3,8 @@ RAG (Retrieval-Augmented Generation) para análisis geopolítico.
 Recupera contexto de documentos y genera respuestas con LLM.
 """
 
+from __future__ import annotations
+
 import json
 import os
 from pathlib import Path

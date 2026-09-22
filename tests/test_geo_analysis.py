@@ -1,10 +1,8 @@
 """Tests for geo_analysis module."""
 
 import json
-from pathlib import Path
-import pytest
 
-from src.geo_analysis import run_geo_analysis, ENTITY_COORDS
+from src.geo_analysis import ENTITY_COORDS, run_geo_analysis
 
 
 def test_entity_coords_dict():
@@ -24,14 +22,18 @@ def test_run_geo_analysis_returns_dict(tmp_path):
     output_dir.mkdir()
 
     ner_file = data_dir / "ner_entities.json"
-    ner_file.write_text(json.dumps({
-        "total_entities": 5,
-        "top_entities": [
-            {"entity": "Chile", "label": "GPE", "count": 10},
-            {"entity": "Argentina", "label": "GPE", "count": 5},
-            {"entity": "Brasil", "label": "GPE", "count": 3}
-        ]
-    }))
+    ner_file.write_text(
+        json.dumps(
+            {
+                "total_entities": 5,
+                "top_entities": [
+                    {"entity": "Chile", "label": "GPE", "count": 10},
+                    {"entity": "Argentina", "label": "GPE", "count": 5},
+                    {"entity": "Brasil", "label": "GPE", "count": 3},
+                ],
+            }
+        )
+    )
 
     result = run_geo_analysis(data_dir=data_dir, output_dir=output_dir)
     assert isinstance(result, dict)
@@ -42,6 +44,7 @@ def test_run_geo_analysis_returns_dict(tmp_path):
 def test_run_geo_analysis_no_folium(tmp_path, monkeypatch):
     """Test run_geo_analysis when folium is not available."""
     import src.geo_analysis as geo_module
+
     monkeypatch.setattr(geo_module, "FOLIUM_AVAILABLE", False)
 
     data_dir = tmp_path / "export"

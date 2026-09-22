@@ -23,6 +23,7 @@ def test_import_generate_tables():
     """Test generate_tables import (may fail if great_tables not installed)."""
     try:
         from src.generate_tables import generate
+
         assert callable(generate)
     except ImportError:
         pytest.skip("great_tables not available")

@@ -5,7 +5,7 @@ from collections import Counter
 from pathlib import Path
 
 try:
-    import numpy as np  # noqa: F401
+    import numpy as np
     from scipy import stats
 
     SCIPY_AVAILABLE = True

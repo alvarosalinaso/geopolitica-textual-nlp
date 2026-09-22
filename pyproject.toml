@@ -1,0 +1,5 @@
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+# notebooks/ son artefactos de exploración, no código de producción
+extend-exclude = ["notebooks/"]
