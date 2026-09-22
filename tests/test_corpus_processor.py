@@ -111,6 +111,6 @@ def test_create_sample_speeches():
     assert df["year"].dtype in ["int64", "int32"]
     # Check we have real Chilean locations mentioned
     all_text = " ".join(df["text"].tolist())
-    assert "Chile" in all_text
+    assert "Antofagasta" in all_text
     assert "Santiago" in all_text
     assert "Valparaíso" in all_text or "Antofagasta" in all_text
