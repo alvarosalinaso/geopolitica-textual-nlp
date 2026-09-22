@@ -522,6 +522,33 @@ def _build_layout():
                 topic_items.append(card("Palabras Clave por Tema", dcc.Graph(figure=fig_treemap)))
         if td.get("document_topics"):
             doc_df = pd.DataFrame(td["document_topics"])
+            if {"year", "topic", "weight"}.issubset(doc_df.columns) and not doc_df.empty:
+                river = doc_df.groupby(["year", "topic"])["weight"].mean().reset_index()
+                fig_river = px.area(
+                    river, x="year", y="weight", color="topic",
+                    title="Río de Temas — peso LDA por año (streamgraph)",
+                    color_discrete_sequence=[COLORS["burgundy"], COLORS["gold"], COLORS["green"], COLORS["navy"], "#8b4513"],
+                )
+                fig_river.update_layout(
+                    template=PLOTLY_MANUSCRIPT_TEMPLATE,
+                    paper_bgcolor=COLORS["parchment_light"],
+                    plot_bgcolor=COLORS["parchment"],
+                    height=450,
+                    font={"family": "Georgia, 'Palatino Linotype', 'Book Antiqua', serif", "color": COLORS["text"]},
+                    title={"font": {"family": "Georgia, 'Palatino Linotype", "color": COLORS["burgundy"], "size": 16}, "x": 0.5},
+                    xaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a", "title": "Año"},
+                    yaxis={"gridcolor": "#d4c9a8", "zerolinecolor": "#c5a55a", "title": "Peso medio"},
+                )
+                for trace in fig_river.data:
+                    trace.update(
+                        line={"shape": "spline", "width": 0},
+                        hovertemplate="<b>Tema %{fullData.name}</b><br>Año: %{x}<br>Peso: %{y:.3f}<extra></extra>",
+                    )
+                topic_items.append(card("Río de Temas en el Tiempo", html.Div([
+                    dcc.Graph(figure=fig_river),
+                    html.Div("Insight: las corrientes que crecen marcan el giro del discurso (paz → mercado → reconstrucción).",
+                             style={"fontStyle": "italic", "color": COLORS["text_muted"], "marginTop": "8px", "fontFamily": "Georgia, serif"}),
+                ])))
             pivot = doc_df.pivot_table(
                 index="speaker", columns="topic", values="weight",
                 aggfunc="mean", fill_value=0,
