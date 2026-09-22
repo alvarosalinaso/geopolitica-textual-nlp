@@ -67,8 +67,16 @@ def test_run_sentiment_analysis_returns_dict(tmp_path):
             "speaker": ["Speaker A", "Speaker B"],
             "year": [2020, 2021],
             "text": [
-                "This is a positive speech about cooperation and peace.",
-                "This speech discusses conflict and war negatively.",
+                (
+                    "This is a genuinely positive speech celebrating cooperation, "
+                    "peace, and lasting friendship among all the nations of our "
+                    "region for generations to come."
+                ),
+                (
+                    "This speech describes war, conflict, and terrible suffering "
+                    "caused by armed struggle and widespread regional instability "
+                    "across neighboring countries."
+                ),
             ],
         }
     ).to_csv(fallback, index=False)
@@ -96,7 +104,13 @@ def test_run_sentiment_analysis_creates_output_file(tmp_path):
         {
             "speaker": ["Speaker A"],
             "year": [2020],
-            "text": ["This is a positive speech about cooperation and peace."],
+            "text": [
+                (
+                    "This is a positive speech about cooperation and peace, "
+                    "prosperity, and mutual understanding among neighboring "
+                    "countries throughout the continent."
+                ),
+            ],
         }
     ).to_csv(fallback, index=False)
 
