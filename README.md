@@ -54,7 +54,11 @@ Geocodes entities using a local Gazetteer + Nominatim API. Renders interactive m
 
 ### 4. Sentiment analysis
 
-OpenAI API or TextBlob fallback for sentiment scoring on each speech.
+`src/sentiment_analysis.py` usa un léxico español propio y versionado en el repo
+(método primario, sin llamadas de red ni APIs externas). TextBlob queda solo como
+referencia secundaria: su léxico está entrenado en inglés y no está validado para
+español. **Los umbrales ±0.1 (positivo/negativo/neutral) son heurísticos y no están
+calibrados con anotación humana** — ver "Qué mide y qué no".
 
 ---
 
@@ -134,7 +138,7 @@ geopolitica-textual-nlp/
 │   ├── collect_speeches.py       # Descarga corpus BCN en runtime + extracción de texto
 │   ├── corpus_processor.py       # ETL + NER (spaCy)
 │   ├── ner_analysis.py           # Extended NER (ORG, PERSON, NORP)
-│   ├── sentiment_analysis.py     # Sentiment (OpenAI/TextBlob)
+│   ├── sentiment_analysis.py     # Sentiment (léxico ES propio; TextBlob secundario)
 │   ├── rag_analysis.py           # RAG: TF-IDF + LLM
 │   ├── geo_analysis.py           # Folium interactive map
 │   └── export_visualizations.py  # CSV export for multi-platform viz

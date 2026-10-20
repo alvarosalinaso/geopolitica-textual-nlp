@@ -9,26 +9,43 @@ TEXTBLOB_AVAILABLE = importlib.util.find_spec("textblob") is not None
 
 from src.sentiment_analysis import (
     analyze_sentiment_lexicon,
+    analyze_sentiment_textblob,
     run_sentiment_analysis,
+    score_spanish_lexicon,
 )
 
 
 def test_analyze_sentiment_lexicon():
-    """Test lexicon-based sentiment analysis."""
-    if not TEXTBLOB_AVAILABLE:
-        pytest.skip("TextBlob not available")
+    """Test léxico español: textos claramente direccionales."""
     texts = [
-        "This is a great speech about peace.",
-        "War is terrible and causes suffering.",
-        "The meeting took place on Tuesday.",
+        "Este discurso celebra la paz, la cooperación y el progreso de la nación.",
+        "La guerra y el sufrimiento causan una crisis terrible e inhumana.",
+        "El Congreso Nacional sesionó el martes en Santiago.",
     ]
     results = analyze_sentiment_lexicon(texts)
     assert len(results) == 3
+    assert results[0]["label"] == "positivo"
+    assert results[1]["label"] == "negativo"
+    assert results[2]["label"] == "neutral"
     for r in results:
         assert "polarity" in r
         assert "subjectivity" in r
-        assert "label" in r
         assert r["label"] in ["positivo", "negativo", "neutral"]
+
+
+def test_score_spanish_lexicon_negation():
+    """Una negación invierte la polaridad de la palabra siguiente."""
+    positive = score_spanish_lexicon("Fue una victoria gloriosa y un éxito.")
+    negated = score_spanish_lexicon("No fue una victoria gloriosa ni un éxito.")
+    assert positive["polarity"] > 0
+    assert negated["polarity"] <= 0
+
+
+def test_score_spanish_lexicon_ignores_accents():
+    """El léxico normaliza acentos: 'éxito' y 'exito' puntúan igual."""
+    with_accent = score_spanish_lexicon("Éxito y progreso para el país.")
+    without = score_spanish_lexicon("Exito y progreso para el pais.")
+    assert with_accent["polarity"] == without["polarity"]
 
 
 def test_analyze_sentiment_lexicon_empty():
@@ -37,23 +54,24 @@ def test_analyze_sentiment_lexicon_empty():
     assert results == []
 
 
-def test_analyze_sentiment_lexicon_no_textblob():
-    """Test analyze_sentiment_lexicon when TextBlob not available."""
-    import src.sentiment_analysis as sa_module
+def test_analyze_sentiment_lexicon_no_deps():
+    """El léxico español funciona sin TextBlob ni pandas (sin dependencias)."""
+    results = analyze_sentiment_lexicon(["paz y progreso"])
+    assert len(results) == 1
+    assert results[0]["label"] == "positivo"
 
-    original_available = sa_module.TEXTBLOB_AVAILABLE
-    sa_module.TEXTBLOB_AVAILABLE = False
-    try:
-        results = analyze_sentiment_lexicon(["test"])
-        assert results == []
-    finally:
-        sa_module.TEXTBLOB_AVAILABLE = original_available
+
+@pytest.mark.skipif(not TEXTBLOB_AVAILABLE, reason="TextBlob not available")
+def test_analyze_sentiment_textblob():
+    """TextBlob (método secundario) devuelve la misma estructura de campos."""
+    results = analyze_sentiment_textblob(["This is a great and wonderful speech."])
+    assert len(results) == 1
+    for key in ("polarity", "subjectivity", "label"):
+        assert key in results[0]
 
 
 def test_run_sentiment_analysis_returns_dict(tmp_path):
-    """Test that run_sentiment_analysis returns a dict."""
-    if not TEXTBLOB_AVAILABLE:
-        pytest.skip("TextBlob not available")
+    """Test that run_sentiment_analysis returns a dict con method lexicon_es."""
     data_dir = tmp_path / "data"
     output_dir = tmp_path / "export"
     data_dir.mkdir()
@@ -68,14 +86,14 @@ def test_run_sentiment_analysis_returns_dict(tmp_path):
             "year": [2020, 2021],
             "text": [
                 (
-                    "This is a genuinely positive speech celebrating cooperation, "
-                    "peace, and lasting friendship among all the nations of our "
-                    "region for generations to come."
+                    "Este discurso celebra la cooperación regional, la paz "
+                    "duradera y el progreso de la nación para las generaciones "
+                    "venideras con esperanza y optimismo."
                 ),
                 (
-                    "This speech describes war, conflict, and terrible suffering "
-                    "caused by armed struggle and widespread regional instability "
-                    "across neighboring countries."
+                    "Este discurso describe la guerra, el conflicto y el "
+                    "sufrimiento terrible causado por la violencia y la crisis "
+                    "en los países vecinos de la región."
                 ),
             ],
         }
@@ -86,12 +104,12 @@ def test_run_sentiment_analysis_returns_dict(tmp_path):
     assert "method" in result
     assert "n_documents" in result
     assert "polarity_distribution" in result
+    assert result["method"] == "lexicon_es"
+    assert result["thresholds_uncalibrated"] is True
 
 
 def test_run_sentiment_analysis_creates_output_file(tmp_path):
     """Test that run_sentiment_analysis creates sentiment_results.json."""
-    if not TEXTBLOB_AVAILABLE:
-        pytest.skip("TextBlob not available")
     data_dir = tmp_path / "data"
     output_dir = tmp_path / "export"
     data_dir.mkdir()
@@ -106,9 +124,9 @@ def test_run_sentiment_analysis_creates_output_file(tmp_path):
             "year": [2020],
             "text": [
                 (
-                    "This is a positive speech about cooperation and peace, "
-                    "prosperity, and mutual understanding among neighboring "
-                    "countries throughout the continent."
+                    "Este discurso positivo habla de cooperación, paz, "
+                    "prosperidad, bienestar y entendimiento mutuo entre los "
+                    "países vecinos de todo el continente."
                 ),
             ],
         }
@@ -120,5 +138,5 @@ def test_run_sentiment_analysis_creates_output_file(tmp_path):
 
     with open(output_file) as f:
         content = json.load(f)
-    assert content["method"] in ["textblob", "openai"]
+    assert content["method"] == "lexicon_es"
     assert content["n_documents"] >= 1

@@ -1,10 +1,16 @@
 """
 Análisis de sentimiento para discursos geopolíticos.
-Soporta OpenAI API (si hay key) o fallback lexicon-based con TextBlob.
+
+Método primario: léxico español propio, transparente y sin dependencias externas
+ni llamadas de red. TextBlob queda como referencia secundaria documentada.
+
+Los umbrales ±0.1 para las etiquetas positivo/negativo/neutral son heurísticos,
+NO están calibrados con anotación humana: ver README "Qué mide y qué no".
 """
 
 import json
-import os
+import re
+import unicodedata
 from pathlib import Path
 
 try:
@@ -21,9 +27,289 @@ try:
 except ImportError:
     TEXTBLOB_AVAILABLE = False
 
+# Umbrales heurísticos, sin calibrar (documentado en README).
+POSITIVE_THRESHOLD = 0.1
+NEGATIVE_THRESHOLD = -0.1
+
+
+def _strip_accents(token: str) -> str:
+    """Normaliza un token quitando acentos (forma canónica del léxico)."""
+    nfkd = unicodedata.normalize("NFD", token.lower())
+    return "".join(c for c in nfkd if unicodedata.category(c) != "Mn")
+
+
+# Negaciones que invierten la polaridad de la palabra siguiente (ventana de 3 tokens).
+NEGATION_WORDS = {
+    _strip_accents(w) for w in ("no", "nunca", "jamás", "ni", "sin", "tampoco")
+}
+
+# Léxico español: solo palabras de polaridad clara. Se normaliza (minúsculas,
+# sin acentos) al definirlo; no es exhaustivo a propósito: es un léxico
+# pequeño, auditable y versionado en el repo. Términos neutros o ambiguos en
+# discurso político ("seguridad", "defensa", "sanción", "pensión"...) se
+# excluyen a propósito para no inflar la polaridad.
+SPANISH_POSITIVE = {
+    "paz",
+    "concordia",
+    "armonía",
+    "convivencia",
+    "reconciliación",
+    "prosperidad",
+    "progreso",
+    "desarrollo",
+    "bienestar",
+    "futuro",
+    "esperanza",
+    "optimismo",
+    "dignidad",
+    "justicia",
+    "libertad",
+    "democracia",
+    "soberanía",
+    "unidad",
+    "solidaridad",
+    "fraternidad",
+    "hermandad",
+    "amistad",
+    "cooperación",
+    "esfuerzo",
+    "logro",
+    "éxito",
+    "victoria",
+    "ganancia",
+    "mejora",
+    "fortalecimiento",
+    "fortaleza",
+    "grandeza",
+    "glorioso",
+    "heroico",
+    "admirable",
+    "celebrar",
+    "celebración",
+    "felicitaciones",
+    "felicidad",
+    "alegría",
+    "amor",
+    "honor",
+    "homenaje",
+    "agradecer",
+    "gratitud",
+    "bendito",
+    "bendecir",
+    "confianza",
+    "esperanzador",
+    "alentar",
+    "impulso",
+    "impulsar",
+    "edificar",
+    "superar",
+    "conquistar",
+    "favorable",
+    "beneficio",
+    "beneficioso",
+    "utilidad",
+    "provecho",
+    "riqueza",
+    "abundancia",
+    "salud",
+    "avance",
+    "modernización",
+    "tecnología",
+    "innovación",
+    "calidad",
+    "empleo",
+    "vivienda",
+    "beca",
+    "becas",
+    "gratuito",
+    "gratuidad",
+    "ayuda",
+    "protección",
+    "garantía",
+    "igualdad",
+    "equidad",
+    "inclusión",
+    "participación",
+    "transparencia",
+    "compromiso",
+    "consenso",
+    "diálogo",
+    "pacto",
+    "acuerdo",
+    "solidario",
+    "fraterno",
+}
+
+SPANISH_NEGATIVE = {
+    "guerra",
+    "conflicto",
+    "crisis",
+    "pobreza",
+    "hambre",
+    "muerte",
+    "dolor",
+    "sufrimiento",
+    "violencia",
+    "terrorismo",
+    "dictadura",
+    "tiranía",
+    "opresión",
+    "represión",
+    "censura",
+    "cárcel",
+    "exilio",
+    "desempleo",
+    "desigualdad",
+    "injusticia",
+    "corrupción",
+    "delincuencia",
+    "crimen",
+    "narcotráfico",
+    "amenaza",
+    "riesgo",
+    "peligro",
+    "terror",
+    "miedo",
+    "incertidumbre",
+    "recesión",
+    "inflación",
+    "deuda",
+    "déficit",
+    "colapso",
+    "destrucción",
+    "daño",
+    "perjuicio",
+    "engaño",
+    "mentira",
+    "fracaso",
+    "derrota",
+    "pérdida",
+    "padecer",
+    "lamentable",
+    "triste",
+    "doloroso",
+    "fatal",
+    "terrible",
+    "grave",
+    "severo",
+    "crítico",
+    "alerta",
+    "preocupación",
+    "preocupante",
+    "emergencia",
+    "catástrofe",
+    "desastre",
+    "sequía",
+    "inundación",
+    "incendio",
+    "epidemia",
+    "enfermedad",
+    "pandemia",
+    "abuso",
+    "acoso",
+    "asesinato",
+    "criminal",
+    "ilegal",
+    "inmoral",
+    "abandono",
+    "descuido",
+    "negligencia",
+    "obstáculo",
+    "dificultad",
+    "problema",
+    "retroceso",
+    "debilidad",
+    "hostilidad",
+    "tensión",
+    "confusión",
+    "desorden",
+    "caos",
+    "fraude",
+    "soborno",
+    "extorsión",
+    "secuestro",
+    "hurto",
+    "robo",
+    "subempleo",
+    "carencia",
+    "escasez",
+    "castigo",
+    "multa",
+    "embargo",
+    "bloqueo",
+}
+
+SPANISH_POSITIVE = {_strip_accents(w) for w in SPANISH_POSITIVE}
+SPANISH_NEGATIVE = {_strip_accents(w) for w in SPANISH_NEGATIVE}
+
+_TOKEN_RE = re.compile(r"[a-zA-ZáéíóúñÁÉÍÓÚÑ]+")
+
+
+def _tokenize(text: str) -> list[str]:
+    """Extrae tokens normalizados (minúsculas, sin acentos) del texto."""
+    return [_strip_accents(t) for t in _TOKEN_RE.findall(text)]
+
+
+def score_spanish_lexicon(text: str) -> dict:
+    """
+    Puntúa un texto con el léxico español propio.
+
+    polarity = (n_pos - n_neg) / (n_pos + n_neg + 1), en [-1, 1].
+    subjectivity = fracción de tokens cubiertos por el léxico (0 = nada léxico).
+    Una negación ("no", "nunca"...) invierte la polaridad de la palabra
+    de sentimiento que sigue en la ventana de 3 tokens.
+
+    Umbral ±0.1: heurístico, sin calibrar — ver README.
+    """
+    tokens = _tokenize(text)
+    n_pos = 0
+    n_neg = 0
+    for i, tok in enumerate(tokens):
+        if tok in SPANISH_POSITIVE:
+            polarity = 1
+        elif tok in SPANISH_NEGATIVE:
+            polarity = -1
+        else:
+            continue
+        window = tokens[max(0, i - 3) : i]
+        if any(w in NEGATION_WORDS for w in window):
+            polarity = -polarity
+        if polarity > 0:
+            n_pos += 1
+        else:
+            n_neg += 1
+
+    denom = n_pos + n_neg + 1
+    polarity_score = round((n_pos - n_neg) / denom, 4)
+    subjectivity = round((n_pos + n_neg) / max(len(tokens), 1), 4)
+
+    if polarity_score > POSITIVE_THRESHOLD:
+        label = "positivo"
+    elif polarity_score < NEGATIVE_THRESHOLD:
+        label = "negativo"
+    else:
+        label = "neutral"
+
+    return {
+        "polarity": polarity_score,
+        "subjectivity": subjectivity,
+        "label": label,
+    }
+
 
 def analyze_sentiment_lexicon(texts: list[str]) -> list[dict]:
-    """Análisis de sentimiento con TextBlob (lexicon-based)."""
+    """Análisis de sentimiento con el léxico español propio (método primario)."""
+    return [score_spanish_lexicon(text) for text in texts]
+
+
+def analyze_sentiment_textblob(texts: list[str]) -> list[dict]:
+    """
+    Análisis de sentimiento con TextBlob (método secundario de referencia).
+
+    TextBlob usa un léxico y modelo entrenados sobre textos en inglés; su
+    aplicabilidad a discursos en español NO está validada. Se conserva solo
+    como comparación documentada, no como método principal.
+    """
     if not TEXTBLOB_AVAILABLE:
         print("[SENTIMENT] TextBlob no instalado. pip install textblob")
         return []
@@ -44,56 +330,14 @@ def analyze_sentiment_lexicon(texts: list[str]) -> list[dict]:
     return results
 
 
-def analyze_sentiment_openai(
-    texts: list[str], model: str = "gpt-4o-mini"
-) -> list[dict]:
-    """Análisis de sentimiento con OpenAI API."""
-    try:
-        import openai
-
-        client = openai.OpenAI()
-    except Exception:  # noqa: BLE001
-        print("[SENTIMENT] OpenAI no disponible, usando lexicon fallback")
-        return analyze_sentiment_lexicon(texts)
-
-    results = []
-    for text in texts:
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": 'Analiza el sentimiento geopolitical del siguiente texto. Responde SOLO con JSON: {"polarity": float -1 a 1, "subjectivity": float 0 a 1, "label": "positivo"|"negativo"|"neutral", "confidence": float 0 a 1, "summary": "resumen en 10 palabras"}',
-                    },
-                    {"role": "user", "content": text[:4000]},
-                ],
-                temperature=0.1,
-                max_tokens=200,
-            )
-            content = response.choices[0].message.content.strip()
-            # Try to parse JSON from response
-            import re
-
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
-            if json_match:
-                result = json.loads(json_match.group())
-                results.append(result)
-            else:
-                results.append(
-                    {"polarity": 0, "label": "neutral", "error": "parse_error"}
-                )
-        except Exception as e:  # noqa: BLE001
-            results.append({"polarity": 0, "label": "neutral", "error": str(e)})
-
-    return results
-
-
 def run_sentiment_analysis(
     data_dir: Path = Path("data"), output_dir: Path = Path("data/export")
 ) -> dict:
     """
     Análisis de sentimiento de discursos geopolíticos.
+
+    Método: léxico español propio (sin red, sin APIs externas).
+    Los umbrales ±0.1 son heurísticos y no están calibrados.
 
     Returns:
         dict con distribución de sentimientos y estadísticas
@@ -133,19 +377,8 @@ def run_sentiment_analysis(
 
     print(f"[SENTIMENT] Analizando {len(texts)} documentos...")
 
-    # Choose method
-    use_openai = (
-        os.environ.get("OPENAI_API_KEY") and os.environ.get("OPENAI_API_KEY") != ""
-    )
-
-    if use_openai:
-        print("[SENTIMENT] Usando OpenAI API")
-        sentiments = analyze_sentiment_openai(texts)
-    else:
-        print(
-            "[SENTIMENT] Usando TextBlob (lexicon-based) — añade OPENAI_API_KEY para mejor accuracy"
-        )
-        sentiments = analyze_sentiment_lexicon(texts)
+    print("[SENTIMENT] Usando léxico español propio (heurístico, sin calibrar)")
+    sentiments = analyze_sentiment_lexicon(texts)
 
     # Aggregate
     df = pd.DataFrame(sentiments)
@@ -158,7 +391,8 @@ def run_sentiment_analysis(
     }
 
     results = {
-        "method": "openai" if use_openai else "textblob",
+        "method": "lexicon_es",
+        "thresholds_uncalibrated": True,
         "n_documents": len(texts),
         "polarity_distribution": polarity_dist,
         "mean_polarity": round(df["polarity"].mean(), 4)

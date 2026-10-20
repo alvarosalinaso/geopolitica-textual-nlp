@@ -14,7 +14,7 @@ Pipeline NLP para análisis geopolítico de discursos presidenciales chilenos. E
 ### Pipeline (src/)
 1. `corpus_processor.py` — GeopoliticalExtractor: spaCy NER para entidades LOC/GPE
 2. `ner_analysis.py` — run_ner_analysis: NER sobre corpus + archivos de texto
-3. `sentiment_analysis.py` — run_sentiment_analysis: TextBlob (lexicon) o OpenAI API
+3. `sentiment_analysis.py` — run_sentiment_analysis: léxico español propio (primario); TextBlob solo como referencia secundaria (sin OpenAI)
 4. `topic_analysis.py` — analyze_topics: bigramas + LDA (sklearn)
 5. `geo_analysis.py` — run_geo_analysis: mapa Folium con HeatMap + MarkerCluster
 6. `statistical_tests.py` — run_statistical_tests: Chi-cuadrado sobre tipos de entidad
