@@ -96,6 +96,7 @@ def run_ner_analysis(
                 )
 
     entity_counts = Counter((e["text"], e["label"]) for e in all_entities)
+    label_totals = dict(Counter(e["label"] for e in all_entities))
 
     top_entities = [
         {"entity": text, "label": label, "count": count}
@@ -106,7 +107,11 @@ def run_ner_analysis(
     output_file = output_dir / "ner_entities.json"
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(
-            {"total_entities": len(all_entities), "top_entities": top_entities},
+            {
+                "total_entities": len(all_entities),
+                "label_totals": label_totals,
+                "top_entities": top_entities,
+            },
             f,
             ensure_ascii=False,
             indent=2,
