@@ -20,4 +20,6 @@ data/export/
 .DS_Store
 Thumbs.db
 
+# Coverage (reporte de pytest-cov)
+.coverage
 coverage.xml
