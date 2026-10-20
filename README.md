@@ -163,9 +163,7 @@ de abajo son de la corrida del 2026-10-20 sobre los 20 discursos BCN:
 
 ## Captura
 
-TODO: captura de pantalla pendiente — regenerar las figuras con
-`python src/export_visualizations.py` (o abrir los embeds de Datawrapper/Observable)
-y capturar la imagen en `assets/`.
+![Dashboard de Geopolítica Textual](assets/screenshot.png)
 
 ---
 
