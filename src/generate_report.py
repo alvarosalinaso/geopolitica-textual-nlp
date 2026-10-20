@@ -68,7 +68,7 @@ def generate_report(
 
     report = REPORT_TEMPLATE.format(
         title=sections.get("title", "Análisis de Datos"),
-        date=datetime.now().strftime("%Y-%m-%d"),  # noqa: DTZ005
+        date=datetime.now().strftime("%Y-%m-%d"),
         repo=output_dir.parent.name
         if output_dir.parent.name != "data"
         else "portfolio",

@@ -4,9 +4,19 @@
 
 ---
 
-## ⚠️ AVISO IMPORTANTE: Datos Sintéticos
+## ⚠️ AVISO: qué datos son reales y qué no
 
-> **Los discursos presidenciales en este proyecto son RESÚMENES SINTÉTICOS generados para demostración del pipeline NLP, no textos completos reales.** El corpus completo de Cuentas Públicas requiere licenciamiento de la Biblioteca del Congreso Nacional (BCN). Este proyecto demuestra la arquitectura del pipeline (NER → Sentiment → Topic → Geo) con datos de muestra.
+**REAL — corpus BCN:** `data/processed/speeches.csv` contiene 20 Mensajes Presidenciales
+ante el Congreso (1832–2022) descargados y extraídos de los PDF de la Biblioteca del
+Congreso Nacional (BCN) por `src/collect_speeches.py`. Cada fila incluye la URL de origen
+(`source_url`) y la atribución a la BCN (`source`). Los PDF **no** se commitean: el script
+los descarga en ejecución a `data/raw/speeches/`, carpeta ignorada por git. El texto se
+reproduce sin editar, por lo que conserva los errores OCR de los escaneos de la BCN y, en
+algunos documentos, los anexos del mensaje.
+
+**SINTÉTICO — demostración:** `data/sample_speeches.csv` son 9 resúmenes inventados para
+probar el pipeline sin red. No tienen columnas `source_url`/`source` y no representan
+discursos reales.
 
 ---
 
@@ -45,6 +55,25 @@ Geocodes entities using a local Gazetteer + Nominatim API. Renders interactive m
 ### 4. Sentiment analysis
 
 OpenAI API or TextBlob fallback for sentiment scoring on each speech.
+
+---
+
+## Fuentes y licencias
+
+- **Fuente del corpus**: Biblioteca del Congreso Nacional de Chile (BCN) — Historia
+  Política, *Mensajes Presidenciales ante el Congreso Pleno*:
+  <https://www.bcn.cl/historiapolitica/corporaciones/cuentas_publicas/detalle?tipo=presidentes>
+- **Base legal del texto**: Ley 17.336 de Propiedad Intelectual (Chile), art. 41 — "quedan
+  excluidas de la protección de la presente ley [...] cualquier documento público del Estado,
+  tales como [...] discursos oficiales de autoridades públicas [...], cuya reproducción será
+  lícita después de publicadas por el Estado y siempre que obedezcan fielmente al texto
+  original". Por eso el repositorio guarda el texto extraído (sin editar) con URL de origen
+  y atribución, y nunca los PDF.
+- **Cobertura declarada**: la selección curada cubre 1832–2022 (un mensaje por gobierno en
+  la medida en que la BCN lo publica). El índice de la BCN **no publica 1925**; se usa 1926
+  (mismo gobierno, Emiliano Figueroa) y queda documentado en `src/collect_speeches.py`.
+- **Muestra sintética**: `data/sample_speeches.csv` es inventada (demo del pipeline) y se
+  distingue del corpus real porque no tiene `source_url`/`source`.
 
 ---
 
@@ -88,6 +117,7 @@ source .venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 python -m spacy download es_core_news_md
 
+python src/collect_speeches.py   # descarga PDFs de BCN (a carpeta ignorada) y extrae texto
 python src/corpus_processor.py
 python src/ner_analysis.py
 python src/sentiment_analysis.py
@@ -101,6 +131,7 @@ python src/export_visualizations.py
 ```
 geopolitica-textual-nlp/
 ├── src/
+│   ├── collect_speeches.py       # Descarga corpus BCN en runtime + extracción de texto
 │   ├── corpus_processor.py       # ETL + NER (spaCy)
 │   ├── ner_analysis.py           # Extended NER (ORG, PERSON, NORP)
 │   ├── sentiment_analysis.py     # Sentiment (OpenAI/TextBlob)
@@ -108,8 +139,8 @@ geopolitica-textual-nlp/
 │   ├── geo_analysis.py           # Folium interactive map
 │   └── export_visualizations.py  # CSV export for multi-platform viz
 ├── data/
-│   ├── raw/speeches/             # Source PDFs/HTML from BCN
-│   └── processed/speeches.csv    # Extracted speeches (synthetic samples)
+│   ├── raw/speeches/             # PDFs de BCN — se descargan en runtime, ignorados por git
+│   └── processed/speeches.csv    # Texto extraído real (BCN) + URL origen y atribución
 └── requirements.txt
 ```
 

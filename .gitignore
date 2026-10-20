@@ -9,8 +9,11 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Data (keep only raw data tracked)
-data/processed/
+# Data (A-2: los PDF de BCN se descargan en runtime y NUNCA se commitean;
+# solo el corpus extraído speeches.csv va al repo)
+data/raw/
+data/processed/*
+!data/processed/speeches.csv
 data/export/
 
 # OS
