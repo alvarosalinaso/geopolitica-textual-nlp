@@ -991,7 +991,7 @@ app.layout = html.Div(
                     },
                 ),
                 html.Div(
-                    "Cuentas Publicas · 1832–2000",
+                    "Cuentas Publicas · 1832–2022",
                     style={
                         "color": "#e0d5b8",
                         "marginTop": "10px",
@@ -1029,6 +1029,29 @@ app.layout = html.Div(
                 "padding": "35px 25px 60px 25px",
             },
             children=[
+                # Banner de honestidad de datos (auditoría 2026-10)
+                html.Div(
+                    style={
+                        "border": f"2px solid {COLORS['burgundy']}",
+                        "backgroundColor": "#fdf6e3",
+                        "padding": "14px 18px",
+                        "marginBottom": "30px",
+                        "fontSize": "0.9rem",
+                        "lineHeight": "1.5",
+                        "color": COLORS["text"],
+                    },
+                    children=[
+                        html.Strong("⚠ AVISO de datos: "),
+                        (
+                            "el corpus real (20 Mensajes BCN 1832–2022, con OCR de los "
+                            "escaneos) se descarga en runtime vía src/collect_speeches.py; "
+                            "los PDF no están en el repo. La muestra sample_speeches.csv "
+                            "es SINTÉTICA (demo). NER, sentimiento y tópicos son "
+                            "aproximaciones heurísticas sin gold standard (ver README "
+                            "«Qué mide y qué no»). Las cifras se recalculan en cada corrida."
+                        ),
+                    ],
+                ),
                 html.Div(
                     style={
                         "border": f"3px double {COLORS['gold']}",

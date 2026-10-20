@@ -30,7 +30,7 @@ ES: Me daba curiosidad cómo los presidentes chilenos hablan de distintas region
 
 ## Questions I asked
 
-**P1 - Centralist bias:** Does Santiago concentrate a disproportionate share of geopolitical mentions in presidential speeches? I found that in critical periods, over 70% of discursive attention focuses on the metropolitan axis.
+**P1 - Centralist bias:** Does Santiago concentrate a disproportionate share of geopolitical mentions in presidential speeches? On the current real corpus (20 speeches, 1832–2022, `src/key_figures.py`), Santiago has ~1% of GPE/LOC mentions — far from the "dominance" intuition; "Chile" as a whole country mention dominates instead. The old ">70%" figure was based on the synthetic sample and has been removed.
 
 **P2 - Spatial shift:** How does economic interest shift geographically over decades? I mapped the transition from agricultural to mining/industrial focus in legislative debate.
 
@@ -94,13 +94,23 @@ calibrados con anotación humana** — ver "Qué mide y qué no".
 
 ---
 
-## Key findings (sobre datos sintéticos)
+## Key findings (sobre corpus real BCN, corrida de `src/key_figures.py`)
 
-- Santiago concentra 342 menciones (42% del total) — sesgo centralista fuerte
-- Heatmaps históricos muestran el cambio de foco agrícola a minero/industrial
-- Patrones de co-ocurrencia de entidades revelan alianzas geopolíticas en discursos presidenciales
+Cifras reproducibles: ejecuta `python src/key_figures.py` (requiere el corpus real
+de `collect_speeches.py`) y consulta `data/export/key_figures.json`. Los valores
+de abajo son de la corrida del 2026-10-20 sobre los 20 discursos BCN:
 
-> **Nota**: Estos hallazgos se basan en datos sintéticos de muestra. Con corpus real de BCN, los resultados variarán.
+- **5.724 menciones GPE/LOC** en total (3.009 formas únicas, con ruido del modelo:
+  entidades como "Gobierno" o "Estado" a veces se etiquetan como lugar).
+- **Santiago: 53 menciones (~1.0%)** — no hay "dominancia metropolitana" en este
+  corpus; la forma dominante es la mención del país ("Chile", 487).
+- El modelo `es_core_news_sm` comete errores de etiquetado; los resultados son una
+  **aproximación exploratoria**, no un censo geográfico.
+
+> **Nota**: los "hallazgos" anteriores ("342 menciones, 42%", ">70%", "alianzas
+> geopolíticas") provenían del corpus sintético y no se reproducen con datos reales;
+> fueron reemplazados por estas cifras con script verificable. "Co-ocurrencias" en los
+> diagramas de arcos no implican relaciones diplomáticas ni causales.
 
 ---
 
