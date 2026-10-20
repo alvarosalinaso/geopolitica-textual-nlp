@@ -63,8 +63,8 @@ def test_process_corpus_empty_csv(tmp_path):
     assert len(result) == 0
 
 
-def test_extract_entities_with_confidence():
-    """Test extract_entities_with_confidence returns detailed entity info."""
+def test_extract_entities():
+    """Test extract_entities returns entity info without fabricated confidence."""
     if not SPACY_AVAILABLE:
         pytest.skip("spaCy not available")
     extractor = GeopoliticalExtractor("es_core_news_sm")
@@ -72,7 +72,7 @@ def test_extract_entities_with_confidence():
         pytest.skip("spaCy model not available")
 
     text = "El presidente de Chile visitó Argentina y se reunió con el presidente de Brasil en Santiago."
-    entities = extractor.extract_entities_with_confidence(text)
+    entities = extractor.extract_entities(text)
 
     assert isinstance(entities, list)
     assert len(entities) >= 3  # Chile, Argentina, Brasil, Santiago
@@ -82,18 +82,19 @@ def test_extract_entities_with_confidence():
         assert "label" in ent
         assert "start_char" in ent
         assert "end_char" in ent
-        assert "confidence" in ent
+        # No se fabrica 'confidence': los modelos en español no la exponen
+        assert "confidence" not in ent
         assert ent["label"] in ["LOC", "GPE", "ORG", "PERSON", "NORP"]
 
 
 def test_extract_entities_no_nlp():
-    """Test extract_entities_with_confidence when NLP not available."""
+    """Test extract_entities when NLP not available."""
     if not SPACY_AVAILABLE:
         pytest.skip("spaCy not available")
     extractor = GeopoliticalExtractor("es_core_news_sm")
     extractor.nlp = None  # Force no NLP
 
-    entities = extractor.extract_entities_with_confidence("Chile y Argentina")
+    entities = extractor.extract_entities("Chile y Argentina")
     assert entities == []
 
 

@@ -56,9 +56,12 @@ class GeopoliticalExtractor:
 
         return pd.DataFrame(extracted_data)
 
-    def extract_entities_with_confidence(self, text: str) -> list[dict[str, Any]]:
+    def extract_entities(self, text: str) -> list[dict[str, Any]]:
         """
-        Extrae entidades con información de confianza (start/end positions, label).
+        Extrae entidades con sus posiciones en el texto (start/end) y etiqueta.
+
+        Nota: los modelos en español de spaCy no exponen un score de confianza
+        por entidad; no se fabrica ninguno.
         """
         if not self.nlp:
             return []
@@ -74,7 +77,6 @@ class GeopoliticalExtractor:
                         "label": ent.label_,
                         "start_char": ent.start_char,
                         "end_char": ent.end_char,
-                        "confidence": getattr(ent, "confidence", 1.0),
                     }
                 )
 
