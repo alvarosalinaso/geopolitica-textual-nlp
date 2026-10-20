@@ -42,7 +42,7 @@ ES: Me daba curiosidad cómo los presidentes chilenos hablan de distintas region
 
 ### 1. NER with spaCy
 
-Uses `es_core_news_sm` (small Spanish model) for Named Entity Recognition. The small model is faster and lighter for deployment while still providing accurate GPE/LOC entity recognition.
+Uses `es_core_news_sm` (small Spanish model) for Named Entity Recognition. The small model is faster and lighter for deployment while providing usable GPE/LOC entity recognition (noisy — see "Qué mide y qué no").
 
 ### 2. Corpus processing
 
@@ -50,16 +50,19 @@ Uses `es_core_news_sm` (small Spanish model) for Named Entity Recognition. The s
 
 ### 3. Geocoding + Folium maps
 
-Geocoding con un diccionario estático local (~55 ciudades y regiones chilenas en
-`src/export_visualizations.py`), más Nominatim como fallback en `geo_analysis.py`.
+Geocoding con diccionarios estáticos locales: `GEO_DB` (72 ciudades y regiones
+chilenas en `src/export_visualizations.py`) para los CSVs de exportación, y
+`ENTITY_COORDS` en `geo_analysis.py` para el mapa Folium. **No hay geocoder
+externo** (sin Nominatim ni otras APIs de geocoding).
 
 #### Qué mide y qué no (geocoding)
 
 - **Mide**: frecuencia de las entidades GPE/LOC que el modelo spaCy reconoce **y** que
-  existen en el diccionario estático (o que Nominatim resuelve en el mapa Folium).
+  existen en los diccionarios estáticos del repo (`GEO_DB` para los CSVs de exportación;
+  `ENTITY_COORDS` para el mapa Folium).
 - **No mide**: el territorio completo mencionado. Toda mención fuera del diccionario
-  (~55 entradas) se descarta de los CSVs y mapas; no hay fuzzy matching. Una mención
-  como "el Norte Grande" o "la Zona Central" no tiene coordenada y desaparece.
+  (72 entradas en `GEO_DB`) se descarta de los CSVs y mapas; no hay fuzzy matching.
+  Una mención como "el Norte Grande" o "la Zona Central" no tiene coordenada y desaparece.
 - **Sesgos conocidos**: el modelo `es_core_news_sm` confunde a veces personas (PERSON)
   con lugares (GPE), y el texto fuente tiene OCR de los escaneos de la BCN. Los
   resultados son una **aproximación exploratoria**, no un inventario geográfico completo.
@@ -72,6 +75,30 @@ Geocoding con un diccionario estático local (~55 ciudades y regiones chilenas e
 referencia secundaria: su léxico está entrenado en inglés y no está validado para
 español. **Los umbrales ±0.1 (positivo/negativo/neutral) son heurísticos y no están
 calibrados con anotación humana** — ver "Qué mide y qué no".
+
+---
+
+## Qué mide y qué no
+
+Resumen de alcance y límites de cada componente (las secciones de "How it works"
+detallan el geocoding):
+
+- **NER (`es_core_news_sm`)**: reconoce entidades GPE/LOC/ORG/PERSON/NORP de forma
+  ruidosa, sin gold standard ni métricas de evaluación en este repo. Atributos como
+  "confianza" no existen en los modelos en español y no se fabrican.
+- **Sentimiento**: léxico español propio con umbrales ±0.1 **sin calibrar** (no hay
+  anotación humana de referencia). TextBlob es solo comparación secundaria, no un
+  baseline validado para español.
+- **Tópicos (LDA)**: número de tópicos elegido por grilla con coherencia UMass
+  implementada localmente (referencia relativa entre corridas, no una medida absoluta
+  de calidad). Las etiquetas de tópico son palabras más probables, no interpretaciones
+  humanas.
+- **Geocoding**: solo resuelve lo que está en los diccionarios estáticos del repo
+  (72 entradas en `GEO_DB`; `ENTITY_COORDS` para el mapa Folium); sin fuzzy matching ni
+  geocoder externo. El script imprime la cobertura real (`X/Y menciones con coordenadas`).
+- **Corpus**: 20 Mensajes BCN (1832–2022, uno por gobierno disponible), con OCR heredado
+  de los escaneos; no es un inventario continuo ni representativo de todo el discurso
+  presidencial.
 
 ---
 
@@ -102,8 +129,10 @@ de abajo son de la corrida del 2026-10-20 sobre los 20 discursos BCN:
 
 - **5.724 menciones GPE/LOC** en total (3.009 formas únicas, con ruido del modelo:
   entidades como "Gobierno" o "Estado" a veces se etiquetan como lugar).
-- **Santiago: 53 menciones (~1.0%)** — no hay "dominancia metropolitana" en este
-  corpus; la forma dominante es la mención del país ("Chile", 487).
+- **Santiago: 56 menciones (1.0%)** — no hay "dominancia metropolitana" en este
+  corpus; la forma dominante es la mención del país ("Chile", 487). (56 incluye
+  el alias "Santiago de Chile"; solo "Santiago" exacto son 53 — ver
+  `key_figures.json`.)
 - El modelo `es_core_news_sm` comete errores de etiquetado; los resultados son una
   **aproximación exploratoria**, no un censo geográfico.
 

@@ -9,10 +9,10 @@ from ner_analysis import run_ner_analysis
 from rag_analysis import run_rag_analysis
 from sentiment_analysis import run_sentiment_analysis
 
-# Diccionario de Geocodificación Estática (gacetilla local de ~55 ciudades
-# y regiones chilenas). Cobertura limitada: cualquier mención fuera de este
-# diccionario se descarta de los mapas/CSVs geográficos (no hay fuzzy matching
-# ni Nominatim en este path). Documentado en README "Qué mide y qué no".
+# Diccionario de Geocodificación Estática: 72 ciudades y regiones chilenas
+# (gacetilla local, sin fuzzy matching ni geocoder externo). Cobertura limitada:
+# cualquier mención fuera de este diccionario se descarta de los mapas/CSVs
+# geográficos. Documentado en README "Qué mide y qué no".
 GEO_DB = {
     # Ciudades
     "Arica": [-18.4783, -70.3126],
