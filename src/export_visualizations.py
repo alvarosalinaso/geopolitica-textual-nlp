@@ -9,23 +9,86 @@ from ner_analysis import run_ner_analysis
 from rag_analysis import run_rag_analysis
 from sentiment_analysis import run_sentiment_analysis
 
-# Diccionario de Geocodificación Estática (mismo que en app_mapas.py)
+# Diccionario de Geocodificación Estática (gacetilla local de ~55 ciudades
+# y regiones chilenas). Cobertura limitada: cualquier mención fuera de este
+# diccionario se descarta de los mapas/CSVs geográficos (no hay fuzzy matching
+# ni Nominatim en este path). Documentado en README "Qué mide y qué no".
 GEO_DB = {
+    # Ciudades
+    "Arica": [-18.4783, -70.3126],
     "Iquique": [-20.2133, -70.1503],
+    "Pozo Almonte": [-20.2597, -69.8861],
     "Antofagasta": [-23.6500, -70.4000],
+    "Mejillones": [-23.0992, -70.4467],
+    "Calama": [-22.4536, -68.9264],
+    "Taltal": [-25.4100, -70.4900],
+    "Chañaral": [-26.3467, -70.6200],
     "Copiapó": [-27.3667, -70.3333],
+    "Vallenar": [-28.5762, -70.7570],
+    "La Serena": [-29.9027, -71.2520],
+    "Coquimbo": [-29.9533, -71.3394],
+    "Ovalle": [-30.6011, -71.1932],
+    "Illapel": [-31.6333, -71.1667],
+    "San Felipe": [-32.7500, -70.7283],
+    "Los Andes": [-32.8333, -70.5833],
     "Valparaíso": [-33.0456, -71.6231],
+    "Viña del Mar": [-33.0246, -71.5518],
+    "Quillota": [-32.8800, -71.2494],
+    "San Antonio": [-33.5947, -71.6127],
     "Santiago": [-33.4489, -70.6693],
+    "Rancagua": [-34.1708, -70.7408],
+    "San Fernando": [-34.5891, -70.9931],
+    "Santa Cruz": [-34.6333, -71.3167],
+    "Curicó": [-34.9828, -71.2394],
+    "Molina": [-35.1133, -71.2833],
     "Talca": [-35.4264, -71.6554],
+    "San Javier": [-35.5958, -71.7433],
+    "Linares": [-35.8500, -71.6000],
+    "Cauquenes": [-35.9700, -72.3200],
+    "Constitución": [-35.3333, -72.4167],
+    "Parral": [-36.1433, -71.8250],
     "Chillán": [-36.6063, -72.1034],
+    "Los Ángeles": [-37.4667, -72.3500],
+    "Tomé": [-36.6167, -72.9500],
+    "Coronel": [-37.0333, -73.2167],
     "Concepción": [-36.8270, -73.0503],
     "Talcahuano": [-36.7167, -73.1167],
+    "Angol": [-37.7964, -72.7161],
+    "Temuco": [-38.7359, -72.5904],
+    "Villarrica": [-39.2833, -72.2167],
+    "Pucón": [-39.2667, -71.9667],
     "Valdivia": [-39.8142, -73.2459],
     "Osorno": [-40.5739, -73.1336],
+    "Puerto Varas": [-41.3167, -72.9833],
     "Puerto Montt": [-41.4693, -72.9424],
+    "Castro": [-42.4808, -73.7667],
+    "Ancud": [-41.8697, -73.8262],
+    "Coyhaique": [-45.5717, -72.0669],
+    "Puerto Aysén": [-45.4000, -72.7000],
+    "Chile Chico": [-46.5400, -71.7300],
     "Punta Arenas": [-53.1500, -70.9167],
-    "Arica": [-18.4783, -70.3126],
-    "Biobío": [-37.4667, -72.3500],
+    "Porvenir": [-53.2949, -70.3677],
+    "Puerto Natales": [-51.7236, -72.5100],
+    # Regiones / provincias históricas mencionadas en discursos
+    # (Antofagasta, Coquimbo y Valparaíso ya están como ciudad arriba)
+    "Arica y Parinacota": [-18.4783, -70.3126],
+    "Tarapacá": [-20.2133, -70.1503],
+    "Atacama": [-27.3667, -70.3333],
+    "Aconcagua": [-32.8333, -70.5833],
+    "Metropolitana": [-33.4489, -70.6693],
+    "O'Higgins": [-34.1708, -70.7408],
+    "Colchagua": [-34.6333, -71.3167],
+    "Maule": [-35.4264, -71.6554],
+    "Ñuble": [-36.6063, -72.1034],
+    "Biobío": [-36.8270, -73.0503],
+    "Araucanía": [-38.7359, -72.5904],
+    "Los Ríos": [-39.8142, -73.2459],
+    "Los Lagos": [-41.4693, -72.9424],
+    "Llanquihue": [-41.4693, -72.9424],
+    "Chiloé": [-42.4808, -73.7667],
+    "Aysén": [-45.5717, -72.0669],
+    "Magallanes": [-53.1500, -70.9167],
+    "Patagonia": [-46.5400, -71.7300],
 }
 
 
@@ -155,12 +218,12 @@ def generate_embed_snippets(export_dir):
     loading="lazy">
   </iframe>
   <p style="font-size: 0.8em; color: #666; text-align: center;">
-    Datos: dw_choropleth_temporal.csv | Motor NLP: spaCy (es_core_news_md)
+    Datos: dw_choropleth_temporal.csv | Motor NLP: spaCy (es_core_news_sm)
   </p>
 </div>
 ```
 
-## 2. Flourish Arc Diagram (Relaciones entre Ubicaciones)
+## 2. Flourish Arc Diagram (Co-ocurrencias de Ubicaciones)
 ```html
 <div class="flourish-chart" style="width: 100%; max-width: 900px; margin: auto;">
   <div
@@ -223,15 +286,24 @@ def main():
         return
 
     print("\n[→] Procesando corpus con NLP (spaCy)...")
-    extractor = GeopoliticalExtractor(model_size="es_core_news_md")
+    extractor = GeopoliticalExtractor(model_size="es_core_news_sm")
     df_places = extractor.process_corpus(dataset_path)
 
     if df_places.empty:
         print("[✗] No se extrajeron entidades. Verifique el modelo NLP.")
-        print("    Comando: python -m spacy download es_core_news_md")
+        print("    Comando: python -m spacy download es_core_news_sm")
         return
 
     print(f"[✓] Corpus procesado: {len(df_places)} menciones extraídas\n")
+
+    # Cobertura del geocoding: qué fracción de menciones tiene coordenadas
+    mapped = df_places["Mentioned_Location"].isin(GEO_DB).sum()
+    total = len(df_places)
+    print(
+        f"[i] Geocoding: {mapped}/{total} menciones con coordenadas en el "
+        f"diccionario estático ({GEO_DB and len(GEO_DB)} entradas). "
+        "Las menciones fuera del diccionario se descartan de mapas/CSVs."
+    )
 
     print("[→] Generando CSV para Datawrapper...")
     generate_dw_choropleth_temporal(df_places, export_dir)

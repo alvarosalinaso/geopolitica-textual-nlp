@@ -50,7 +50,20 @@ Uses `es_core_news_sm` (small Spanish model) for Named Entity Recognition. The s
 
 ### 3. Geocoding + Folium maps
 
-Geocodes entities using a local Gazetteer + Nominatim API. Renders interactive maps with Folium (heatmaps, bubble maps).
+Geocoding con un diccionario estático local (~55 ciudades y regiones chilenas en
+`src/export_visualizations.py`), más Nominatim como fallback en `geo_analysis.py`.
+
+#### Qué mide y qué no (geocoding)
+
+- **Mide**: frecuencia de las entidades GPE/LOC que el modelo spaCy reconoce **y** que
+  existen en el diccionario estático (o que Nominatim resuelve en el mapa Folium).
+- **No mide**: el territorio completo mencionado. Toda mención fuera del diccionario
+  (~55 entradas) se descarta de los CSVs y mapas; no hay fuzzy matching. Una mención
+  como "el Norte Grande" o "la Zona Central" no tiene coordenada y desaparece.
+- **Sesgos conocidos**: el modelo `es_core_news_sm` confunde a veces personas (PERSON)
+  con lugares (GPE), y el texto fuente tiene OCR de los escaneos de la BCN. Los
+  resultados son una **aproximación exploratoria**, no un inventario geográfico completo.
+- El script imprime la cobertura real (`X/Y menciones con coordenadas`) en cada corrida.
 
 ### 4. Sentiment analysis
 
@@ -119,7 +132,7 @@ cd geopolitica-textual-nlp
 python -m venv .venv
 source .venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
-python -m spacy download es_core_news_md
+python -m spacy download es_core_news_sm
 
 python src/collect_speeches.py   # descarga PDFs de BCN (a carpeta ignorada) y extrae texto
 python src/corpus_processor.py
