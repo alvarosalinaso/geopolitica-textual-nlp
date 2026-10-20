@@ -6,9 +6,9 @@ Pipeline NLP para análisis geopolítico de discursos presidenciales chilenos. E
 ## Componentes principales
 
 ### Datos
-- `data/raw/speeches/` — PDFs de cuentas públicas (1842-2000)
-- `data/raw/sample_speeches.csv` — Fallback con textos de ejemplo
-- `data/processed/speeches.csv` — Corpus procesado (year, speaker, text)
+- `data/raw/speeches/` — PDFs de la BCN descargados en runtime (ignorados por git; nunca se commitean)
+- `data/sample_speeches.csv` — Muestra sintética de demo (no son discursos reales)
+- `data/processed/speeches.csv` — Corpus real BCN extraído (year, speaker, text, description, source_url, source)
 - `data/export/` — Outputs: ner_entities.json, sentiment_results.json, topics.json, statistical_tests.json, geopolitical_map.html
 
 ### Pipeline (src/)
@@ -17,7 +17,7 @@ Pipeline NLP para análisis geopolítico de discursos presidenciales chilenos. E
 3. `sentiment_analysis.py` — run_sentiment_analysis: léxico español propio (primario); TextBlob solo como referencia secundaria (sin OpenAI)
 4. `topic_analysis.py` — analyze_topics: bigramas + LDA (sklearn)
 5. `geo_analysis.py` — run_geo_analysis: mapa Folium con HeatMap + MarkerCluster
-6. `statistical_tests.py` — run_statistical_tests: Chi-cuadrado sobre tipos de entidad
+6. `statistical_tests.py` — run_statistical_tests: Chi-cuadrado sobre frecuencias completas por tipo de entidad (label_totals), con Cramér's V y caveats
 7. `generate_tables.py` — generate: tablas resumen
 8. `generate_report.py` — generate_report: reporte consolidado
 9. `analyze_all.py` — Orquestador que ejecuta todo el pipeline
