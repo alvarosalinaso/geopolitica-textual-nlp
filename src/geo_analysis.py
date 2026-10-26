@@ -1,5 +1,5 @@
 """
-Análisis geoespacial con Folium — Mapa interactivo de entidades geopolíticas.
+Análisis geoespacial con Folium, Mapa interactivo de entidades geopolíticas.
 """
 
 import json
@@ -50,9 +50,7 @@ def run_geo_analysis(
     # Load NER data
     ner_file = data_dir / "ner_entities.json"
     if not ner_file.exists():
-        print(
-            "[GEO] ner_entities.json no encontrado — ejecutar ner_analysis.py primero"
-        )
+        print("[GEO] ner_entities.json no encontrado, ejecutar ner_analysis.py primero")
         return {}
 
     with open(ner_file, encoding="utf-8") as f:

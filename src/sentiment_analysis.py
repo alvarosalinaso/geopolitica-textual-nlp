@@ -259,7 +259,7 @@ def score_spanish_lexicon(text: str) -> dict:
     Una negación ("no", "nunca"...) invierte la polaridad de la palabra
     de sentimiento que sigue en la ventana de 3 tokens.
 
-    Umbral ±0.1: heurístico, sin calibrar — ver README.
+    Umbral ±0.1: heurístico, sin calibrar, ver README.
     """
     tokens = _tokenize(text)
     n_pos = 0

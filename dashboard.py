@@ -1,4 +1,4 @@
-"""Dash Dashboard: Chilean Political Discourse NLP Analysis — Illuminated Manuscript Edition."""
+"""Dash Dashboard: Chilean Political Discourse NLP Analysis, Illuminated Manuscript Edition."""
 
 import json
 import os
@@ -12,7 +12,7 @@ from dash import Input, Output, callback, dcc, html, no_update
 
 app = dash.Dash(
     __name__,
-    title="Discurso Presidencial Chileno — NLP",
+    title="Discurso Presidencial Chileno, NLP",
     meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
 )
 server = app.server
@@ -537,7 +537,7 @@ def _build_layout():
         ner_block = html.Div(
             [
                 card(
-                    "Key Insights — NER",
+                    "Key Insights, NER",
                     html.Div(
                         [
                             insight_card(
@@ -569,7 +569,7 @@ def _build_layout():
                     ),
                 ),
                 card(
-                    "Top 20 Entidades — clic para filtrar",
+                    "Top 20 Entidades, clic para filtrar",
                     html.Div(
                         [
                             dcc.Graph(id="ner-entities-bar", figure=fig_entities),
@@ -638,7 +638,7 @@ def _build_layout():
                     hovertemplate="Polaridad: %{x}<br>Documentos: %{y}<extra>Clic para filtrar</extra>"
                 )
             sent_block = card(
-                "Sentimiento — clic para filtrar",
+                "Sentimiento, clic para filtrar",
                 html.Div(
                     [
                         dcc.Graph(id="sentiment-hist", figure=fig_sent),
@@ -707,7 +707,7 @@ def _build_layout():
                 )
             topic_items.append(
                 card(
-                    "Bigramas Mas Frecuentes — clic para filtrar",
+                    "Bigramas Mas Frecuentes, clic para filtrar",
                     html.Div(
                         [
                             dcc.Graph(id="topics-bigrams-bar", figure=fig_bigrams),
@@ -810,7 +810,7 @@ def _build_layout():
                     x="year",
                     y="weight",
                     color="topic",
-                    title="Río de Temas — peso LDA por año (streamgraph)",
+                    title="Río de Temas, peso LDA por año (streamgraph)",
                     color_discrete_sequence=[
                         COLORS["burgundy"],
                         COLORS["gold"],
@@ -1029,7 +1029,7 @@ app.layout = html.Div(
                 "padding": "35px 25px 60px 25px",
             },
             children=[
-                # Banner de honestidad de datos (auditoría 2026-10)
+                # Banner de honestidad de datos (revisión 2026-10)
                 html.Div(
                     style={
                         "border": f"2px solid {COLORS['burgundy']}",
@@ -1180,7 +1180,7 @@ def ner_crossfilter(click):
     if not click:
         return no_update
     e = click["points"][0].get("y", "?")
-    return f"Entidad seleccionada: {e} — úsala para filtrar sentimiento y tópicos."
+    return f"Entidad seleccionada: {e}, úsala para filtrar sentimiento y tópicos."
 
 
 @callback(
@@ -1192,7 +1192,7 @@ def sentiment_crossfilter(click):
     if not click:
         return no_update
     x = click["points"][0].get("x", "?")
-    return f"Rango de polaridad seleccionado: {x} — filtra los documentos de ese sentimiento."
+    return f"Rango de polaridad seleccionado: {x}, filtra los documentos de ese sentimiento."
 
 
 @callback(
@@ -1204,7 +1204,7 @@ def topics_crossfilter(click):
     if not click:
         return no_update
     b = click["points"][0].get("y", "?")
-    return f"Bigrama seleccionado: {b} — ver en qué discursos domina."
+    return f"Bigrama seleccionado: {b}, ver en qué discursos domina."
 
 
 if __name__ == "__main__":

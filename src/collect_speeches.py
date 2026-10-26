@@ -1,6 +1,6 @@
 """Descarga los Mensajes Presidenciales (Cuentas Públicas) desde el sitio de la BCN.
 
-Ajuste A-2 (auditoría 2026-10):
+Ajuste A-2 (revisión 2026-10):
 - Los PDF se descargan en ejecución a ``data/raw/speeches/``, carpeta ignorada por git.
   NUNCA se commitean PDFs de BCN.
 - En el repositorio solo queda el texto extraído en ``data/processed/speeches.csv``
@@ -11,7 +11,7 @@ Ajuste A-2 (auditoría 2026-10):
   corrige las URLs rotas anteriores (S3 gobcl con 403 y ML-0832000-1 con 404).
 
 Base legal del texto conservado en el repo: Ley 17.336 de Propiedad Intelectual
-(Chile), art. 41 — "Quedan excluidas de la protección de la presente ley [...] cualquier
+(Chile), art. 41, "Quedan excluidas de la protección de la presente ley [...] cualquier
 documento público del Estado, tales como [...] discursos oficiales de autoridades
 públicas [...], cuya reproducción será lícita después de publicadas por el Estado y
 siempre que obedezcan fielmente al texto original". Los Mensajes Presidenciales ante el
@@ -46,7 +46,7 @@ LISTING_URL = (
 )
 
 SOURCE_ATTRIBUTION = (
-    "Biblioteca del Congreso Nacional (BCN) — Historia Política: "
+    "Biblioteca del Congreso Nacional (BCN), Historia Política: "
     "Mensajes Presidenciales ante el Congreso Pleno"
 )
 
@@ -201,7 +201,7 @@ def download_pdf(url: str, dest: Path, retries: int = 3) -> bool:
             if resp.status_code == 200:
                 print(
                     f"  [WARN] Respuesta no-PDF ({resp.headers.get('Content-Type')})"
-                    f" para {url} — no se guarda"
+                    f" para {url}, no se guarda"
                 )
                 return False
         except requests.RequestException as exc:

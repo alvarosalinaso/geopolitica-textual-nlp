@@ -44,7 +44,7 @@ REPORT_TEMPLATE = """# {title}
 {references}
 
 ---
-*Generado automáticamente por `python src/generate_report.py` — {date}*
+*Generado automáticamente por `python src/generate_report.py`, {date}*
 """
 
 

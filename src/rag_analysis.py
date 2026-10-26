@@ -62,7 +62,7 @@ class SimpleRAG:
                 messages=[
                     {
                         "role": "system",
-                        "content": "Eres un analista geopolítico experto. Responde basándote SOLO en el contexto proporcionado. Sé conciso y preciso.",
+                        "content": "Analiza el contexto como analista geopolítico. Responde basándote SOLO en el contexto proporcionado. Sé conciso y preciso.",
                     },
                     {
                         "role": "user",

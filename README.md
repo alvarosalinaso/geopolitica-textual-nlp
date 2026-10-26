@@ -6,7 +6,7 @@
 
 ## ⚠️ AVISO: qué datos son reales y qué no
 
-**REAL — corpus BCN:** `data/processed/speeches.csv` contiene 20 Mensajes Presidenciales
+**REAL, corpus BCN:** `data/processed/speeches.csv` contiene 20 Mensajes Presidenciales
 ante el Congreso (1832–2022) descargados y extraídos de los PDF de la Biblioteca del
 Congreso Nacional (BCN) por `src/collect_speeches.py`. Cada fila incluye la URL de origen
 (`source_url`) y la atribución a la BCN (`source`). Los PDF **no** se commitean: el script
@@ -14,7 +14,7 @@ los descarga en ejecución a `data/raw/speeches/`, carpeta ignorada por git. El 
 reproduce sin editar, por lo que conserva los errores OCR de los escaneos de la BCN y, en
 algunos documentos, los anexos del mensaje.
 
-**SINTÉTICO — demostración:** `data/sample_speeches.csv` son 9 resúmenes inventados para
+**SINTÉTICO, demostración:** `data/sample_speeches.csv` son 9 resúmenes inventados para
 probar el pipeline sin red. No tienen columnas `source_url`/`source` y no representan
 discursos reales.
 
@@ -30,7 +30,7 @@ ES: Me daba curiosidad cómo los presidentes chilenos hablan de distintas region
 
 ## Questions I asked
 
-**P1 - Centralist bias:** Does Santiago concentrate a disproportionate share of geopolitical mentions in presidential speeches? On the current real corpus (20 speeches, 1832–2022, `src/key_figures.py`), Santiago has ~1% of GPE/LOC mentions — far from the "dominance" intuition; "Chile" as a whole country mention dominates instead. The old ">70%" figure was based on the synthetic sample and has been removed.
+**P1 - Centralist bias:** Does Santiago concentrate a disproportionate share of geopolitical mentions in presidential speeches? On the current real corpus (20 speeches, 1832–2022, `src/key_figures.py`), Santiago has ~1% of GPE/LOC mentions, far from the "dominance" intuition; "Chile" as a whole country mention dominates instead. The old ">70%" figure was based on the synthetic sample and has been removed.
 
 **P2 - Spatial shift:** How does economic interest shift geographically over decades? I mapped the transition from agricultural to mining/industrial focus in legislative debate.
 
@@ -42,7 +42,7 @@ ES: Me daba curiosidad cómo los presidentes chilenos hablan de distintas region
 
 ### 1. NER with spaCy
 
-Uses `es_core_news_sm` (small Spanish model) for Named Entity Recognition. The small model is faster and lighter for deployment while providing usable GPE/LOC entity recognition (noisy — see "Qué mide y qué no").
+Uses `es_core_news_sm` (small Spanish model) for Named Entity Recognition. The small model is faster and lighter for deployment while providing usable GPE/LOC entity recognition (noisy, see "Qué mide y qué no").
 
 ### 2. Corpus processing
 
@@ -74,7 +74,7 @@ externo** (sin Nominatim ni otras APIs de geocoding).
 (método primario, sin llamadas de red ni APIs externas). TextBlob queda solo como
 referencia secundaria: su léxico está entrenado en inglés y no está validado para
 español. **Los umbrales ±0.1 (positivo/negativo/neutral) son heurísticos y no están
-calibrados con anotación humana** — ver "Qué mide y qué no".
+calibrados con anotación humana**, ver "Qué mide y qué no".
 
 ---
 
@@ -104,10 +104,10 @@ detallan el geocoding):
 
 ## Fuentes y licencias
 
-- **Fuente del corpus**: Biblioteca del Congreso Nacional de Chile (BCN) — Historia
+- **Fuente del corpus**: Biblioteca del Congreso Nacional de Chile (BCN), Historia
   Política, *Mensajes Presidenciales ante el Congreso Pleno*:
   <https://www.bcn.cl/historiapolitica/corporaciones/cuentas_publicas/detalle?tipo=presidentes>
-- **Base legal del texto**: Ley 17.336 de Propiedad Intelectual (Chile), art. 41 — "quedan
+- **Base legal del texto**: Ley 17.336 de Propiedad Intelectual (Chile), art. 41, "quedan
   excluidas de la protección de la presente ley [...] cualquier documento público del Estado,
   tales como [...] discursos oficiales de autoridades públicas [...], cuya reproducción será
   lícita después de publicadas por el Estado y siempre que obedezcan fielmente al texto
@@ -129,9 +129,9 @@ de abajo son de la corrida del 2026-10-20 sobre los 20 discursos BCN:
 
 - **5.724 menciones GPE/LOC** en total (3.009 formas únicas, con ruido del modelo:
   entidades como "Gobierno" o "Estado" a veces se etiquetan como lugar).
-- **Santiago: 56 menciones (1.0%)** — no hay "dominancia metropolitana" en este
+- **Santiago: 56 menciones (1.0%)**, no hay "dominancia metropolitana" en este
   corpus; la forma dominante es la mención del país ("Chile", 487). (56 incluye
-  el alias "Santiago de Chile"; solo "Santiago" exacto son 53 — ver
+  el alias "Santiago de Chile"; solo "Santiago" exacto son 53, ver
   `key_figures.json`.)
 - El modelo `es_core_news_sm` comete errores de etiquetado; los resultados son una
   **aproximación exploratoria**, no un censo geográfico.
@@ -146,7 +146,7 @@ de abajo son de la corrida del 2026-10-20 sobre los 20 discursos BCN:
 ## Visualizations
 
 <details>
-<summary><strong>Datawrapper — Geographic distribution</strong></summary>
+<summary><strong>Datawrapper, Geographic distribution</strong></summary>
 
 <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;">
   <iframe src="https://datawrapper.dwcdn.net/u5dAm/" title="Entity Distribution Map" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" loading="lazy" allowfullscreen></iframe>
@@ -154,7 +154,7 @@ de abajo son de la corrida del 2026-10-20 sobre los 20 discursos BCN:
 </details>
 
 <details>
-<summary><strong>Observable — Frequency by location</strong></summary>
+<summary><strong>Observable, Frequency by location</strong></summary>
 
 <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;">
   <iframe src="https://observablehq.com/@alvarosalinaso/geopolitica-frequency" title="Mention Frequency" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" loading="lazy" allowfullscreen></iframe>
@@ -199,7 +199,7 @@ geopolitica-textual-nlp/
 │   ├── geo_analysis.py           # Folium interactive map
 │   └── export_visualizations.py  # CSV export for multi-platform viz
 ├── data/
-│   ├── raw/speeches/             # PDFs de BCN — se descargan en runtime, ignorados por git
+│   ├── raw/speeches/             # PDFs de BCN, se descargan en runtime, ignorados por git
 │   └── processed/speeches.csv    # Texto extraído real (BCN) + URL origen y atribución
 └── requirements.txt
 ```
@@ -208,9 +208,9 @@ geopolitica-textual-nlp/
 
 ## Related projects
 
-- [Chile Geografía Histórica](https://github.com/alvarosalinaso/chile-geografia-historica) — Interactive map of Chile's historical geography
-- [Chilean Video Games](https://github.com/alvarosalinaso/chilean-videogames-analysis) — Market analysis of Chilean indie games
-- [Portfolio Web](https://github.com/alvarosalinaso/portfolio-web) — Dashboard with all projects
+- [Chile Geografía Histórica](https://github.com/alvarosalinaso/chile-geografia-historica), Interactive map of Chile's historical geography
+- [Chilean Video Games](https://github.com/alvarosalinaso/chilean-videogames-analysis), Market analysis of Chilean indie games
+- [Portfolio Web](https://github.com/alvarosalinaso/portfolio-web), Dashboard with all projects
 
 ---
 

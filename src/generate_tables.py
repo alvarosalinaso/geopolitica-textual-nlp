@@ -11,7 +11,7 @@ def generate():
     ner_file = Path("data/export/ner_entities.json")
     if not ner_file.exists():
         print(
-            "[TABLE] ner_entities.json no encontrado — ejecutar ner_analysis.py primero"
+            "[TABLE] ner_entities.json no encontrado, ejecutar ner_analysis.py primero"
         )
         return
 
@@ -23,7 +23,7 @@ def generate():
 
     tbl = (
         GT(df)
-        .tab_header(title="Top 10 Entidades Geopolíticas — Discursos Patronato")
+        .tab_header(title="Top 10 Entidades Geopolíticas, Discursos Patronato")
         .tab_source_note("Fuente: NER spaCy es_core_news_sm | Análisis: Álvaro Salinas")
     )
     Path("assets").mkdir(exist_ok=True)
