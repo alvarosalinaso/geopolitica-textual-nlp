@@ -8,7 +8,9 @@ Los umbrales ±0.1 para las etiquetas positivo/negativo/neutral son heurísticos
 NO están calibrados con anotación humana: ver README "Qué mide y qué no".
 """
 
-import json
+from __future__ import annotations
+
+import logging
 import re
 import unicodedata
 from pathlib import Path
@@ -27,9 +29,29 @@ try:
 except ImportError:
     TEXTBLOB_AVAILABLE = False
 
+try:
+    from src.data_loader import find_corpus, list_text_files, load_speeches, write_json
+    from src.metrics import (
+        label_distribution,
+        lexicon_polarity,
+        lexicon_subjectivity,
+        polarity_label,
+    )
+except ImportError:  # ejecución directa: python src/sentiment_analysis.py
+    from data_loader import find_corpus, list_text_files, load_speeches, write_json
+    from metrics import (
+        label_distribution,
+        lexicon_polarity,
+        lexicon_subjectivity,
+        polarity_label,
+    )
+
+logger = logging.getLogger(__name__)
+
 # Umbrales heurísticos, sin calibrar (documentado en README).
 POSITIVE_THRESHOLD = 0.1
 NEGATIVE_THRESHOLD = -0.1
+MIN_TEXT_CHARS = 100
 
 
 def _strip_accents(token: str) -> str:
@@ -279,21 +301,11 @@ def score_spanish_lexicon(text: str) -> dict:
         else:
             n_neg += 1
 
-    denom = n_pos + n_neg + 1
-    polarity_score = round((n_pos - n_neg) / denom, 4)
-    subjectivity = round((n_pos + n_neg) / max(len(tokens), 1), 4)
-
-    if polarity_score > POSITIVE_THRESHOLD:
-        label = "positivo"
-    elif polarity_score < NEGATIVE_THRESHOLD:
-        label = "negativo"
-    else:
-        label = "neutral"
-
+    polarity_score = lexicon_polarity(n_pos, n_neg)
     return {
         "polarity": polarity_score,
-        "subjectivity": subjectivity,
-        "label": label,
+        "subjectivity": lexicon_subjectivity(n_pos + n_neg, len(tokens)),
+        "label": polarity_label(polarity_score, POSITIVE_THRESHOLD, NEGATIVE_THRESHOLD),
     }
 
 
@@ -311,20 +323,17 @@ def analyze_sentiment_textblob(texts: list[str]) -> list[dict]:
     como comparación documentada, no como método principal.
     """
     if not TEXTBLOB_AVAILABLE:
-        print("[SENTIMENT] TextBlob no instalado. pip install textblob")
+        logger.warning("TextBlob no instalado. pip install textblob")
         return []
     results = []
     for text in texts:
         blob = TextBlob(text[:5000])
+        polarity = blob.sentiment.polarity
         results.append(
             {
-                "polarity": round(blob.sentiment.polarity, 4),
+                "polarity": round(polarity, 4),
                 "subjectivity": round(blob.sentiment.subjectivity, 4),
-                "label": "positivo"
-                if blob.sentiment.polarity > 0.1
-                else "negativo"
-                if blob.sentiment.polarity < -0.1
-                else "neutral",
+                "label": polarity_label(polarity, 0.1, -0.1),
             }
         )
     return results
@@ -342,53 +351,39 @@ def run_sentiment_analysis(
     Returns:
         dict con distribución de sentimientos y estadísticas
     """
-    texts = []
-    sources = []
+    texts: list[str] = []
+    sources: list[str] = []
 
-    csv_path = data_dir / "processed" / "speeches.csv"
-    fallback_csv = data_dir / "sample_speeches.csv"
-    if PANDAS_AVAILABLE and csv_path.exists():
-        df = pd.read_csv(csv_path)
+    corpus_path = find_corpus(data_dir)
+    if PANDAS_AVAILABLE and corpus_path is not None:
+        df = load_speeches(corpus_path)
         for _, row in df.iterrows():
-            text = str(row.get("text", ""))
-            source = str(row.get("speaker", "")) + " " + str(row.get("year", ""))
-            if len(text.strip()) > 100:
+            text = str(row["text"])
+            if len(text.strip()) > MIN_TEXT_CHARS:
                 texts.append(text)
-                sources.append(source.strip())
-    elif PANDAS_AVAILABLE and fallback_csv.exists():
-        df = pd.read_csv(fallback_csv)
-        for _, row in df.iterrows():
-            text = str(row.get("text", ""))
-            source = str(row.get("speaker", "")) + " " + str(row.get("year", ""))
-            if len(text.strip()) > 100:
-                texts.append(text)
-                sources.append(source.strip())
+                sources.append(f"{row['speaker']} {row['year']}".strip())
 
-    text_files = list(data_dir.rglob("*.txt")) + list(data_dir.rglob("*.md"))
-    for tf in text_files[:20]:
+    for tf in list_text_files(data_dir)[:20]:
         text = tf.read_text(encoding="utf-8", errors="ignore")
-        if len(text.strip()) > 100:
+        if len(text.strip()) > MIN_TEXT_CHARS:
             texts.append(text)
             sources.append(tf.name)
 
     if not texts:
-        print("[SENTIMENT] No valid texts found")
+        logger.warning("No se encontraron textos válidos")
         return {}
 
-    print(f"[SENTIMENT] Analizando {len(texts)} documentos...")
-
-    print("[SENTIMENT] Usando léxico español propio (heurístico, sin calibrar)")
+    logger.info(
+        "Analizando %d documentos con léxico español propio (heurístico, sin calibrar)",
+        len(texts),
+    )
     sentiments = analyze_sentiment_lexicon(texts)
 
     # Aggregate
     df = pd.DataFrame(sentiments)
     df["source"] = sources[: len(df)]
 
-    polarity_dist = {
-        "positivo": len(df[df["label"] == "positivo"]),
-        "neutral": len(df[df["label"] == "neutral"]),
-        "negativo": len(df[df["label"] == "negativo"]),
-    }
+    polarity_dist = label_distribution(df["label"])
 
     results = {
         "method": "lexicon_es",
@@ -406,15 +401,16 @@ def run_sentiment_analysis(
         else df.head(20).to_dict(orient="records"),
     }
 
-    print(f"[SENTIMENT] Distribución: {polarity_dist}")
-    print(f"[SENTIMENT] Polaridad media: {results['mean_polarity']:.3f}")
+    logger.info("Distribución: %s", polarity_dist)
+    logger.info("Polaridad media: %.3f", results["mean_polarity"])
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    with open(output_dir / "sentiment_results.json", "w", encoding="utf-8") as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
+    write_json(results, output_dir / "sentiment_results.json")
 
     return results
 
 
 if __name__ == "__main__":
+    from logging_config import setup_logging
+
+    setup_logging()
     run_sentiment_analysis()

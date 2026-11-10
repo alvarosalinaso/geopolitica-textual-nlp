@@ -26,6 +26,7 @@ Uso:
 from __future__ import annotations
 
 import argparse
+import logging
 import re
 import time
 import unicodedata
@@ -35,9 +36,16 @@ import pandas as pd
 import pdfplumber
 import requests
 
-RAW_DIR = Path(__file__).resolve().parent.parent / "data" / "raw" / "speeches"
-PROCESSED_DIR = Path(__file__).resolve().parent.parent / "data" / "processed"
-PROCESSED_CSV = PROCESSED_DIR / "speeches.csv"
+try:
+    from src.data_loader import PROCESSED_CSV, RAW_DIR
+    from src.validator import validate_speeches
+except ImportError:  # ejecución directa: python src/collect_speeches.py
+    from data_loader import PROCESSED_CSV, RAW_DIR
+    from validator import validate_speeches
+
+logger = logging.getLogger(__name__)
+
+PROCESSED_DIR = PROCESSED_CSV.parent
 
 # Índice oficial (una sola página con todos los períodos, 1832–actualidad)
 LISTING_URL = (
@@ -183,7 +191,7 @@ def select_speeches(refs: list[dict], years: tuple[int, ...]) -> list[dict]:
     for year in years:
         candidates = [r for r in refs if r["year"] == year]
         if not candidates:
-            print(f"  [SKIP] {year}: no está en el índice de la BCN")
+            logger.warning("%d: no está en el índice de la BCN, se omite", year)
             continue
         candidates.sort(key=lambda r: (0 if r["month"] in (5, 6) else 1, r["url"]))
         selected.append(candidates[0])
@@ -199,13 +207,14 @@ def download_pdf(url: str, dest: Path, retries: int = 3) -> bool:
                 dest.write_bytes(resp.content)
                 return True
             if resp.status_code == 200:
-                print(
-                    f"  [WARN] Respuesta no-PDF ({resp.headers.get('Content-Type')})"
-                    f" para {url}, no se guarda"
+                logger.warning(
+                    "Respuesta no-PDF (%s) para %s, no se guarda",
+                    resp.headers.get("Content-Type"),
+                    url,
                 )
                 return False
         except requests.RequestException as exc:
-            print(f"  [WARN] Intento {attempt + 1} falló para {url}: {exc}")
+            logger.warning("Intento %d falló para %s: %s", attempt + 1, url, exc)
             if attempt < retries:
                 time.sleep(2 * (attempt + 1))
     return False
@@ -221,7 +230,7 @@ def extract_text_from_pdf(pdf_path: Path) -> str:
                 if text:
                     pages_text.append(text)
     except Exception as exc:  # noqa: BLE001
-        print(f"  [WARN] pdfplumber falló para {pdf_path.name}: {exc}")
+        logger.warning("pdfplumber falló para %s: %s", pdf_path.name, exc)
         return ""
     return "\n\n".join(pages_text)
 
@@ -232,29 +241,29 @@ def build_corpus(
     """Descarga los PDF seleccionados y extrae el texto a un DataFrame."""
     raw_dir.mkdir(parents=True, exist_ok=True)
 
-    print("[1/3] Obteniendo índice de la BCN...")
+    logger.info("[1/3] Obteniendo índice de la BCN...")
     refs = parse_listing(fetch_listing())
-    print(f"      {len(refs)} documentos en el índice")
+    logger.info("%d documentos en el índice", len(refs))
     selected = select_speeches(refs, years)
-    print(f"      {len(selected)} años seleccionados")
+    logger.info("%d años seleccionados", len(selected))
 
     rows: list[dict] = []
     for ref in selected:
         year = ref["year"]
-        print(f"[2/3] {year} {ref['speaker'] or '(sin orador parseado)'}...")
+        logger.info("[2/3] %d %s", year, ref["speaker"] or "(sin orador parseado)")
         filename = f"{year}_{_slugify(ref['speaker'] or 'discurso')}.pdf"
         pdf_path = raw_dir / filename
 
         if not pdf_path.exists():
             if not download_pdf(ref["url"], pdf_path):
-                print(f"  [SKIP] Descarga fallida: {ref['url']}")
+                logger.warning("Descarga fallida, se omite: %s", ref["url"])
                 continue
         else:
-            print(f"  [OK] PDF ya descargado: {filename}")
+            logger.info("PDF ya descargado: %s", filename)
 
         text = extract_text_from_pdf(pdf_path)
         if not text or len(text) < 200:
-            print(f"  [SKIP] Texto insuficiente en {filename}")
+            logger.warning("Texto insuficiente en %s, se omite", filename)
             continue
 
         rows.append(
@@ -267,7 +276,7 @@ def build_corpus(
                 "source": SOURCE_ATTRIBUTION,
             }
         )
-        print(f"  [OK] {len(text):,} caracteres extraídos")
+        logger.info("%s caracteres extraídos", f"{len(text):,}")
         time.sleep(0.5)
 
     return pd.DataFrame(rows)
@@ -275,9 +284,10 @@ def build_corpus(
 
 def save_corpus(df: pd.DataFrame, csv_path: Path = PROCESSED_CSV) -> None:
     """Guarda el corpus extraído (solo texto + URL origen + atribución BCN)."""
+    validate_speeches(df, name=csv_path.name)
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(csv_path, index=False, encoding="utf-8")
-    print(f"[3/3] {len(df)} discursos guardados en {csv_path}")
+    logger.info("[3/3] %d discursos guardados en %s", len(df), csv_path)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -293,10 +303,13 @@ def main(argv: list[str] | None = None) -> None:
 
     df = build_corpus(tuple(args.years))
     if df.empty:
-        print("\n[DONE] Ningún discurso procesado. Revisa la conexión a la BCN.")
+        logger.error("Ningún discurso procesado. Revisa la conexión a la BCN.")
         return
     save_corpus(df)
 
 
 if __name__ == "__main__":
+    from logging_config import setup_logging
+
+    setup_logging()
     main()

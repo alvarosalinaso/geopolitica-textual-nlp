@@ -12,19 +12,27 @@ Uso:
 
 from __future__ import annotations
 
-import json
+import logging
 from collections import Counter
 from pathlib import Path
 
 try:
-    import pandas as pd
     import spacy
 
     DEPS_AVAILABLE = True
 except ImportError:
     DEPS_AVAILABLE = False
 
-BASE = Path(__file__).parent.parent
+try:
+    from src.data_loader import PROJECT_ROOT, load_speeches, write_json
+    from src.metrics import percentage
+except ImportError:  # ejecución directa: python src/key_figures.py
+    from data_loader import PROJECT_ROOT, load_speeches, write_json
+    from metrics import percentage
+
+logger = logging.getLogger(__name__)
+
+BASE = PROJECT_ROOT
 GPE_LOC = ("GPE", "LOC")
 
 
@@ -40,7 +48,7 @@ def compute_key_figures(csv_path: Path | None = None) -> dict:
             f"{csv_path} no existe. Ejecuta primero: python src/collect_speeches.py"
         )
 
-    df = pd.read_csv(csv_path)
+    df = load_speeches(csv_path)
     nlp = spacy.load("es_core_news_sm", disable=["parser", "lemmatizer"])
 
     counter: Counter[str] = Counter()
@@ -68,36 +76,39 @@ def compute_key_figures(csv_path: Path | None = None) -> dict:
         "total_gpe_loc_mentions": total,
         "unique_places": len(counter),
         "santiago_mentions": santiago,
-        "santiago_share_pct": round(100 * santiago / total, 1) if total else 0.0,
+        "santiago_share_pct": percentage(santiago, total),
         "top_places": [{"place": p, "mentions": c} for p, c in top],
     }
     return figures
 
 
-def main():
+def main() -> None:
     figures = compute_key_figures()
-    out = BASE / "data" / "export" / "key_figures.json"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with open(out, "w", encoding="utf-8") as f:
-        json.dump(figures, f, ensure_ascii=False, indent=2)
+    out = write_json(figures, BASE / "data" / "export" / "key_figures.json")
 
-    print(
-        f"[KEY] Corpus: {figures['n_speeches']} discursos "
-        f"({figures['year_min']}-{figures['year_max']})"
+    logger.info(
+        "Corpus: %d discursos (%d-%d)",
+        figures["n_speeches"],
+        figures["year_min"],
+        figures["year_max"],
     )
-    print(
-        f"[KEY] Menciones GPE/LOC: {figures['total_gpe_loc_mentions']} "
-        f"({figures['unique_places']} lugares únicos)"
+    logger.info(
+        "Menciones GPE/LOC: %d (%d lugares únicos)",
+        figures["total_gpe_loc_mentions"],
+        figures["unique_places"],
     )
-    print(
-        f"[KEY] Santiago: {figures['santiago_mentions']} menciones "
-        f"({figures['santiago_share_pct']}%)"
+    logger.info(
+        "Santiago: %d menciones (%s%%)",
+        figures["santiago_mentions"],
+        figures["santiago_share_pct"],
     )
-    print("[KEY] Top 5:")
     for row in figures["top_places"][:5]:
-        print(f"      {row['place']}: {row['mentions']}")
-    print(f"[KEY] Guardado en {out}")
+        logger.info("Top: %s = %d", row["place"], row["mentions"])
+    logger.info("Guardado en %s", out)
 
 
 if __name__ == "__main__":
+    from logging_config import setup_logging
+
+    setup_logging()
     main()

@@ -2,7 +2,9 @@
 Análisis geoespacial con Folium, Mapa interactivo de entidades geopolíticas.
 """
 
-import json
+from __future__ import annotations
+
+import logging
 from pathlib import Path
 
 try:
@@ -12,6 +14,15 @@ try:
     FOLIUM_AVAILABLE = True
 except ImportError:
     FOLIUM_AVAILABLE = False
+
+try:
+    from src.data_loader import load_json
+    from src.validator import validate_entities
+except ImportError:  # ejecución directa: python src/geo_analysis.py
+    from data_loader import load_json
+    from validator import validate_entities
+
+logger = logging.getLogger(__name__)
 
 # Coordenadas de ciudades/entidades chilenas y geopolíticas
 ENTITY_COORDS = {
@@ -44,19 +55,19 @@ def run_geo_analysis(
         dict con estadísticas y path del mapa
     """
     if not FOLIUM_AVAILABLE:
-        print("[GEO] folium no instalado. pip install folium")
+        logger.warning("folium no instalado. pip install folium")
         return {}
 
     # Load NER data
     ner_file = data_dir / "ner_entities.json"
     if not ner_file.exists():
-        print("[GEO] ner_entities.json no encontrado, ejecutar ner_analysis.py primero")
+        logger.warning(
+            "ner_entities.json no encontrado, ejecutar ner_analysis.py primero"
+        )
         return {}
 
-    with open(ner_file, encoding="utf-8") as f:
-        data = json.load(f)
-
-    entities = data.get("top_entities", [])
+    data = load_json(ner_file)
+    entities = validate_entities(data.get("top_entities", []))
 
     # Create map centered on Chile
     m = folium.Map(
@@ -130,10 +141,15 @@ def run_geo_analysis(
         ),
     }
 
-    print(f"[GEO] Mapa generado: {map_file}")
-    print(f"[GEO] {entities_plotted} entidades plotteadas de {len(entities)} totales")
+    logger.info("Mapa generado: %s", map_file)
+    logger.info(
+        "%d entidades plotteadas de %d totales", entities_plotted, len(entities)
+    )
     return results
 
 
 if __name__ == "__main__":
+    from logging_config import setup_logging
+
+    setup_logging()
     run_geo_analysis()

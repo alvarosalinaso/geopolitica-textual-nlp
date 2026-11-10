@@ -3,8 +3,16 @@ Genera reporte estilo paper académico en Markdown.
 """
 
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
+
+try:
+    from src.data_loader import load_json
+except ImportError:  # ejecución directa: python src/generate_report.py
+    from data_loader import load_json
+
+logger = logging.getLogger(__name__)
 
 REPORT_TEMPLATE = """# {title}
 
@@ -52,8 +60,7 @@ def load_results(output_dir: Path) -> dict:
     """Carga todos los archivos JSON de resultados."""
     results = {}
     for json_file in output_dir.glob("*.json"):
-        with open(json_file, encoding="utf-8") as f:
-            results[json_file.stem] = json.load(f)
+        results[json_file.stem] = load_json(json_file)
     return results
 
 
@@ -97,7 +104,7 @@ def generate_report(
     report_path = report_dir / "paper_report.md"
     report_path.write_text(report, encoding="utf-8")
 
-    print(f"[REPORT] Generado: {report_path}")
+    logger.info("Reporte generado: %s", report_path)
     return report_path
 
 
@@ -115,7 +122,7 @@ def build_sections(results: dict) -> dict:
     }
 
 
-def format_results(results: dict) -> dict:
+def format_results(results: dict) -> str:
     """Formatea resultados como secciones del paper."""
     sections = {}
     for name, data in results.items():
@@ -138,4 +145,7 @@ def format_results(results: dict) -> dict:
 
 
 if __name__ == "__main__":
+    from logging_config import setup_logging
+
+    setup_logging()
     generate_report()
