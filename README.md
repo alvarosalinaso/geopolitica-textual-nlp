@@ -113,6 +113,7 @@ python -m spacy download es_core_news_sm
 python src/collect_speeches.py     # descarga PDFs BCN (carpeta ignorada) y extrae texto
 python src/key_figures.py          # cifras clave -> data/export/key_figures.json
 python src/analyze_all.py          # pipeline completo -> data/export/
+python -m src.export_editorial_data  # CSV para Datawrapper/Flourish -> data/export/editorial/ (ver EMBED_GUIDE.md)
 ```
 
 Tests y lint (sin red ni PDFs, usan muestra sintética):
