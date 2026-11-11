@@ -5,7 +5,7 @@ Recupera contexto de documentos y genera respuestas con LLM.
 
 from __future__ import annotations
 
-import json
+import logging
 import os
 from pathlib import Path
 
@@ -24,16 +24,23 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
+try:
+    from src.data_loader import list_text_files, write_json
+except ImportError:  # ejecución directa: python src/rag_analysis.py
+    from data_loader import list_text_files, write_json
+
+logger = logging.getLogger(__name__)
+
 
 class SimpleRAG:
     """RAG system con TF-IDF retrieval + LLM generation."""
 
-    def __init__(self):
-        self.documents = []
+    def __init__(self) -> None:
+        self.documents: list[str] = []
         self.vectorizer = None
         self.tfidf_matrix = None
 
-    def ingest(self, texts: list[str]):
+    def ingest(self, texts: list[str]) -> None:
         """Indexa documentos para retrieval."""
         self.documents = texts
         if SKLEARN_AVAILABLE and texts:
@@ -107,7 +114,7 @@ def run_rag_analysis(
         dict con respuestas RAG y métricas de retrieval
     """
     if not PANDAS_AVAILABLE:
-        print("[RAG] pandas no instalado")
+        logger.warning("pandas no instalado")
         return {}
 
     if not queries:
@@ -119,8 +126,8 @@ def run_rag_analysis(
             "¿Qué temas geopolíticos dominan en el análisis textual?",
         ]
 
-    text_files = list(data_dir.rglob("*.txt")) + list(data_dir.rglob("*.md"))
-    documents = []
+    text_files = list_text_files(data_dir)
+    documents: list[str] = []
     for tf in text_files[:30]:
         text = tf.read_text(encoding="utf-8", errors="ignore")
         words = text.split()
@@ -130,10 +137,10 @@ def run_rag_analysis(
                 documents.append(chunk)
 
     if not documents:
-        print("[RAG] No documents found")
+        logger.warning("No se encontraron documentos")
         return {}
 
-    print(f"[RAG] Indexando {len(documents)} chunks de {len(text_files)} documentos...")
+    logger.info("Indexando %d chunks de %d documentos", len(documents), len(text_files))
 
     rag = SimpleRAG()
     rag.ingest(documents)
@@ -162,15 +169,15 @@ def run_rag_analysis(
                 "method": "openai" if has_llm else "extractive",
             }
         )
-        print(f"[RAG] Q: {q[:60]}... -> {len(context_docs)} docs recuperados")
+        logger.info("Q: %s... -> %d docs recuperados", q[:60], len(context_docs))
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    with open(output_dir / "rag_results.json", "w", encoding="utf-8") as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-
-    print(f"[RAG] {len(queries)} consultas procesadas")
+    write_json(results, output_dir / "rag_results.json")
+    logger.info("%d consultas procesadas", len(queries))
     return results
 
 
 if __name__ == "__main__":
+    from logging_config import setup_logging
+
+    setup_logging()
     run_rag_analysis()

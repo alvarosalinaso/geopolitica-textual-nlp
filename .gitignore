@@ -23,3 +23,15 @@ Thumbs.db
 # Coverage (reporte de pytest-cov)
 .coverage
 coverage.xml
+
+# Caches de herramientas
+.pytest_cache/
+.ruff_cache/
+
+# Exportaciones regeneradas por src/export_visualizations.py (viven en data/export/)
+/dw_choropleth_temporal.csv
+/flourish_arc_geopolitica.csv
+/observable_frecuencias.csv
+
+# Muestra sintética regenerable (scripts/generate_synthetic_sample.py)
+tests/fixtures/synthetic_speeches.csv

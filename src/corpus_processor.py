@@ -1,8 +1,28 @@
-import os
+from __future__ import annotations
+
+import logging
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import spacy
+
+try:
+    from src.data_loader import find_corpus, read_table
+    from src.validator import (
+        REQUIRED_SPEECH_COLUMNS,
+        validate_columns,
+        validate_speeches,
+    )
+except ImportError:  # ejecución directa: python src/corpus_processor.py
+    from data_loader import find_corpus, read_table
+    from validator import (
+        REQUIRED_SPEECH_COLUMNS,
+        validate_columns,
+        validate_speeches,
+    )
+
+logger = logging.getLogger(__name__)
 
 # Notas de despliegue: Si es primera vez, se debe instalar el modelo de spacy localmente con:
 # python -m spacy download es_core_news_sm
@@ -22,12 +42,14 @@ class GeopoliticalExtractor:
         try:
             self.nlp = spacy.load(model_size)
         except OSError:
-            print(
-                f"Cargando fallback NLP. Asegúrese de ejecutar: python -m spacy download {model_size}"
+            logger.warning(
+                "Modelo spaCy '%s' no disponible. Ejecuta: python -m spacy download %s",
+                model_size,
+                model_size,
             )
             self.nlp = None
 
-    def process_corpus(self, csv_filepath: str) -> pd.DataFrame:
+    def process_corpus(self, csv_filepath: Path | str) -> pd.DataFrame:
         """
         Recibe un CSV con discursos históricos y extrae sus menciones espaciales.
         Retorna un DataFrame enriquecido listo para georeferenciación.
@@ -35,10 +57,15 @@ class GeopoliticalExtractor:
         if not self.nlp:
             return pd.DataFrame()
 
-        df = pd.read_csv(csv_filepath)
+        name = Path(csv_filepath).name
+        df = validate_columns(read_table(csv_filepath), REQUIRED_SPEECH_COLUMNS, name)
+        if df.empty:
+            logger.warning("%s no tiene filas; no hay entidades que extraer", name)
+            return pd.DataFrame()
+        df = validate_speeches(df, name=name)
         extracted_data = []
 
-        for index, row in df.iterrows():
+        for _, row in df.iterrows():
             text = row["text"]
             doc = self.nlp(text)
 
@@ -111,16 +138,14 @@ def create_sample_speeches() -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    # Testeo local aislado
+    from logging_config import setup_logging
+
+    setup_logging()
     extractor = GeopoliticalExtractor()
-    test_path = os.path.join("data", "processed", "speeches.csv")
-    if not os.path.exists(test_path):
-        test_path = os.path.join("data", "sample_speeches.csv")
-    if os.path.exists(test_path):
-        resultados = extractor.process_corpus(test_path)
-        print("--- Entidades Geopolíticas Extraídas ---")
-        print(resultados.head(15))
+    corpus_path = find_corpus()
+    if corpus_path is not None:
+        resultados = extractor.process_corpus(corpus_path)
+        logger.info("Entidades geopolíticas extraídas:\n%s", resultados.head(15))
     else:
-        print("No data file found. Creating sample data...")
-        sample_df = create_sample_speeches()
-        print(sample_df.to_string())
+        logger.warning("Sin archivo de datos; usando muestra en memoria")
+        logger.info("\n%s", create_sample_speeches().to_string())

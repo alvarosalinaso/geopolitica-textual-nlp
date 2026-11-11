@@ -1,7 +1,10 @@
 """Tests estadisticos para analisis geopolitico."""
 
-import json
+from __future__ import annotations
+
+import logging
 from pathlib import Path
+from typing import Any
 
 try:
     import numpy as np
@@ -11,8 +14,19 @@ try:
 except ImportError:
     SCIPY_AVAILABLE = False
 
+try:
+    from src.data_loader import load_json, write_json
+    from src.metrics import cramers_v as compute_cramers_v
+    from src.metrics import uniform_expected
+except ImportError:  # ejecución directa: python src/statistical_tests.py
+    from data_loader import load_json, write_json
+    from metrics import cramers_v as compute_cramers_v
+    from metrics import uniform_expected
 
-def _to_json_serializable(obj):
+logger = logging.getLogger(__name__)
+
+
+def _to_json_serializable(obj: Any) -> Any:
     """Convert numpy types to Python native types for JSON serialization."""
     if isinstance(obj, (np.bool_, np.integer, np.floating)):
         return obj.item()
@@ -31,13 +45,12 @@ def run_statistical_tests(
 
     ner_file = data_dir / "ner_entities.json"
     if not ner_file.exists():
-        print(
-            "[STATS] ner_entities.json no encontrado - ejecutar ner_analysis.py primero"
+        logger.warning(
+            "ner_entities.json no encontrado - ejecutar ner_analysis.py primero"
         )
         return {}
 
-    with open(ner_file, encoding="utf-8") as f:
-        data = json.load(f)
+    data = load_json(ner_file)
 
     results = {}
 
@@ -64,13 +77,10 @@ def run_statistical_tests(
         types = list(label_totals.keys())
         counts = list(label_totals.values())
         total = sum(counts)
-        expected = [total / len(types)] * len(types)
+        expected = uniform_expected(counts)
         chi2, p_chi = stats.chisquare(counts, expected)
 
-        # Cramér's V (corrección para muestras grandes)
-        n = total
-        k = len(types)
-        cramers_v = (chi2 / (n * (k - 1))) ** 0.5 if n > 0 and k > 1 else 0.0
+        cramers_v = compute_cramers_v(chi2, total, len(types))
 
         caveats = [
             "Baseline uniforme es una heurística, no una teoría sustantiva; los modelos NER tienen sesgos de anotación por tipo.",
@@ -90,14 +100,17 @@ def run_statistical_tests(
             "n_total": total,
             "caveats": caveats,
         }
-        print(
-            f"[STATS] Chi2: chi2={chi2:.3f}, p={p_chi:.4f}, Cramér's V={cramers_v:.3f}"
-        )
+        logger.info("Chi2: chi2=%.3f, p=%.4f, Cramér's V=%.3f", chi2, p_chi, cramers_v)
 
     # Convert all numpy types to Python native types
     results = _to_json_serializable(results)
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    with open(output_dir / "statistical_tests.json", "w", encoding="utf-8") as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
+    write_json(results, output_dir / "statistical_tests.json")
     return results
+
+
+if __name__ == "__main__":
+    from logging_config import setup_logging
+
+    setup_logging()
+    run_statistical_tests()

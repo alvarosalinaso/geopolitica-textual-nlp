@@ -1,13 +1,36 @@
-import os
+"""Exporta CSVs y snippets para Datawrapper, Flourish y Observable.
+
+Orquesta además NER ampliado, sentimiento, mapa Folium, RAG, tests
+estadísticos, tabla ejecutiva y reporte.
+"""
+
+from __future__ import annotations
+
+import logging
 from pathlib import Path
 
 import pandas as pd
 
-from corpus_processor import GeopoliticalExtractor
-from geo_analysis import run_geo_analysis
-from ner_analysis import run_ner_analysis
-from rag_analysis import run_rag_analysis
-from sentiment_analysis import run_sentiment_analysis
+try:
+    from src.corpus_processor import GeopoliticalExtractor
+    from src.data_loader import EXPORT_DIR, find_corpus
+    from src.geo_analysis import run_geo_analysis
+    from src.metrics import century_label, location_frequency_stats
+    from src.ner_analysis import run_ner_analysis
+    from src.rag_analysis import run_rag_analysis
+    from src.sentiment_analysis import run_sentiment_analysis
+    from src.validator import validate_places
+except ImportError:  # ejecución directa: python src/export_visualizations.py
+    from corpus_processor import GeopoliticalExtractor
+    from data_loader import EXPORT_DIR, find_corpus
+    from geo_analysis import run_geo_analysis
+    from metrics import century_label, location_frequency_stats
+    from ner_analysis import run_ner_analysis
+    from rag_analysis import run_rag_analysis
+    from sentiment_analysis import run_sentiment_analysis
+    from validator import validate_places
+
+logger = logging.getLogger(__name__)
 
 # Diccionario de Geocodificación Estática: 72 ciudades y regiones chilenas
 # (gacetilla local, sin fuzzy matching ni geocoder externo). Cobertura limitada:
@@ -92,57 +115,60 @@ GEO_DB = {
 }
 
 
-def ensure_export_dir():
-    """Crea el directorio data/export si no existe."""
-    export_dir = os.path.join("data", "export")
-    os.makedirs(export_dir, exist_ok=True)
+def ensure_export_dir(export_dir: Path = EXPORT_DIR) -> Path:
+    """Crea el directorio de exportación si no existe."""
+    export_dir.mkdir(parents=True, exist_ok=True)
     return export_dir
 
 
-def generate_dw_choropleth_temporal(df_places, export_dir):
-    """
-    Genera data/export/dw_choropleth_temporal.csv
-    Columnas: year, location, mentions, lat, lon
-    """
+def _with_coords(df_places: pd.DataFrame) -> pd.DataFrame:
+    """Filtra menciones presentes en GEO_DB y agrega lat/lon."""
+    validate_places(df_places)
     df = df_places.copy()
     df["Coords"] = df["Mentioned_Location"].map(GEO_DB)
     df_valid = df.dropna(subset=["Coords"]).copy()
     df_valid["lat"] = df_valid["Coords"].apply(lambda x: x[0])
     df_valid["lon"] = df_valid["Coords"].apply(lambda x: x[1])
+    return df_valid
 
+
+def generate_dw_choropleth_temporal(
+    df_places: pd.DataFrame, export_dir: Path | str
+) -> pd.DataFrame:
+    """
+    Genera data/export/dw_choropleth_temporal.csv
+    Columnas: year, location, mentions, lat, lon
+    """
+    df_valid = _with_coords(df_places)
     grouped = (
         df_valid.groupby(["Year", "Mentioned_Location", "lat", "lon"])
         .size()
         .reset_index(name="mentions")
-    )
-    grouped.rename(
-        columns={"Year": "year", "Mentioned_Location": "location"}, inplace=True
+        .rename(columns={"Year": "year", "Mentioned_Location": "location"})
     )
 
-    output_path = os.path.join(export_dir, "dw_choropleth_temporal.csv")
+    output_path = Path(export_dir) / "dw_choropleth_temporal.csv"
     grouped.to_csv(output_path, index=False)
-    print(f"[✓] Generado: {output_path} ({len(grouped)} filas)")
+    logger.info("Generado: %s (%d filas)", output_path, len(grouped))
     return grouped
 
 
-def generate_flourish_arc_geopolitica(df_places, export_dir):
+def generate_flourish_arc_geopolitica(
+    df_places: pd.DataFrame, export_dir: Path | str
+) -> pd.DataFrame:
     """
     Genera data/export/flourish_arc_geopolitica.csv
     Columnas: source_location, target_location, co_occurrences, year
     """
-    df = df_places.copy()
-    df["Coords"] = df["Mentioned_Location"].map(GEO_DB)
-    df_valid = df.dropna(subset=["Coords"]).copy()
+    df_valid = _with_coords(df_places)
 
     arcs = []
     for year, group in df_valid.groupby("Year"):
+        speakers_by_loc = group.groupby("Mentioned_Location")["Speaker"].agg(set)
         locations = group["Mentioned_Location"].unique()
         for i, loc1 in enumerate(locations):
             for loc2 in locations[i + 1 :]:
-                co_occur = len(
-                    set(group[group["Mentioned_Location"] == loc1]["Speaker"].values)
-                    & set(group[group["Mentioned_Location"] == loc2]["Speaker"].values)
-                )
+                co_occur = len(speakers_by_loc[loc1] & speakers_by_loc[loc2])
                 if co_occur > 0:
                     arcs.append(
                         {
@@ -154,56 +180,38 @@ def generate_flourish_arc_geopolitica(df_places, export_dir):
                     )
 
     df_arcs = pd.DataFrame(arcs)
-    output_path = os.path.join(export_dir, "flourish_arc_geopolitica.csv")
+    output_path = Path(export_dir) / "flourish_arc_geopolitica.csv"
     df_arcs.to_csv(output_path, index=False)
-    print(f"[✓] Generado: {output_path} ({len(df_arcs)} filas)")
+    logger.info("Generado: %s (%d filas)", output_path, len(df_arcs))
     return df_arcs
 
 
-def generate_observable_frecuencias(df_places, export_dir):
+def generate_observable_frecuencias(
+    df_places: pd.DataFrame, export_dir: Path | str
+) -> pd.DataFrame:
     """
     Genera data/export/observable_frecuencias.csv
-    Columnas: location, total_mentions, avg_per_speech, century
+    Columnas: location, total_mentions, speeches, avg_per_speech, century
     """
-    df = df_places.copy()
-    df["Coords"] = df["Mentioned_Location"].map(GEO_DB)
-    df_valid = df.dropna(subset=["Coords"]).copy()
+    df_valid = _with_coords(df_places)
+    stats = location_frequency_stats(df_valid)
 
-    stats = (
-        df_valid.groupby("Mentioned_Location")
-        .agg(
-            total_mentions=("Mentioned_Location", "count"),
-            speeches=("Year", "nunique"),
-        )
-        .reset_index()
-    )
-    stats["avg_per_speech"] = (stats["total_mentions"] / stats["speeches"]).round(2)
-
-    def get_century(year):
-        return f"{(year // 100) + 1}th"
-
-    df_valid["century"] = df_valid["Year"].apply(get_century)
+    df_valid["century"] = df_valid["Year"].apply(century_label)
     dominant_century = (
         df_valid.groupby("Mentioned_Location")["century"]
         .agg(lambda x: x.value_counts().index[0])
         .reset_index()
     )
     stats = stats.merge(dominant_century, on="Mentioned_Location", how="left")
-    stats.rename(
-        columns={
-            "Mentioned_Location": "location",
-            "century": "century",
-        },
-        inplace=True,
-    )
+    stats = stats.rename(columns={"Mentioned_Location": "location"})
 
-    output_path = os.path.join(export_dir, "observable_frecuencias.csv")
+    output_path = Path(export_dir) / "observable_frecuencias.csv"
     stats.to_csv(output_path, index=False)
-    print(f"[✓] Generado: {output_path} ({len(stats)} filas)")
+    logger.info("Generado: %s (%d filas)", output_path, len(stats))
     return stats
 
 
-def generate_embed_snippets(export_dir):
+def generate_embed_snippets(export_dir: Path | str) -> Path:
     """Genera data/export/embed_snippets.md con snippets HTML embebibles."""
     md_content = """# Snippets de Visualización Incrustable
 
@@ -263,110 +271,98 @@ def generate_embed_snippets(export_dir):
 2. Los CSV generados en `data/export/` son la fuente de datos para cada visualización.
 3. Para incrustar en cualquier plataforma web, utilice los snippets HTML proporcionados.
 """
-    output_path = os.path.join(export_dir, "embed_snippets.md")
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(md_content)
-    print(f"[✓] Generado: {output_path}")
+    output_path = Path(export_dir) / "embed_snippets.md"
+    output_path.write_text(md_content, encoding="utf-8")
+    logger.info("Generado: %s", output_path)
     return output_path
 
 
-def main():
-    """Función principal: procesa corpus y genera todos los archivos de exportación."""
-    print("=" * 60)
-    print("  Generación de Visualizaciones para Geopolítica Textual")
-    print("=" * 60)
+def main() -> None:
+    """Procesa el corpus y genera todos los archivos de exportación."""
+    logger.info("Generación de visualizaciones para Geopolítica Textual")
 
     export_dir = ensure_export_dir()
-    dataset_path = os.path.join("data", "processed", "speeches.csv")
-    if not os.path.exists(dataset_path):
-        dataset_path = os.path.join("data", "sample_speeches.csv")
-
-    if not os.path.exists(dataset_path):
-        print(f"[✗] No se encontró el dataset: {dataset_path}")
+    dataset_path = find_corpus()
+    if dataset_path is None:
+        logger.error("No se encontró dataset en data/processed ni muestra sintética")
         return
 
-    print("\n[→] Procesando corpus con NLP (spaCy)...")
+    logger.info("Procesando corpus con NLP (spaCy): %s", dataset_path)
     extractor = GeopoliticalExtractor(model_size="es_core_news_sm")
     df_places = extractor.process_corpus(dataset_path)
 
     if df_places.empty:
-        print("[✗] No se extrajeron entidades. Verifique el modelo NLP.")
-        print("    Comando: python -m spacy download es_core_news_sm")
+        logger.error(
+            "No se extrajeron entidades. Ejecuta: python -m spacy download "
+            "es_core_news_sm"
+        )
         return
 
-    print(f"[✓] Corpus procesado: {len(df_places)} menciones extraídas\n")
+    logger.info("Corpus procesado: %d menciones extraídas", len(df_places))
 
     # Cobertura del geocoding: qué fracción de menciones tiene coordenadas
-    mapped = df_places["Mentioned_Location"].isin(GEO_DB).sum()
-    total = len(df_places)
-    print(
-        f"[i] Geocoding: {mapped}/{total} menciones con coordenadas en el "
-        f"diccionario estático ({GEO_DB and len(GEO_DB)} entradas). "
-        "Las menciones fuera del diccionario se descartan de mapas/CSVs."
+    mapped = int(df_places["Mentioned_Location"].isin(GEO_DB).sum())
+    logger.info(
+        "Geocoding: %d/%d menciones con coordenadas en el diccionario estático "
+        "(%d entradas). Las menciones fuera del diccionario se descartan.",
+        mapped,
+        len(df_places),
+        len(GEO_DB),
     )
 
-    print("[→] Generando CSV para Datawrapper...")
     generate_dw_choropleth_temporal(df_places, export_dir)
-
-    print("[→] Generando CSV para Flourish...")
     generate_flourish_arc_geopolitica(df_places, export_dir)
-
-    print("[→] Generando CSV para Observable...")
     generate_observable_frecuencias(df_places, export_dir)
-
-    print("\n[→] Generando snippets de incrustación...")
     generate_embed_snippets(export_dir)
 
-    print("\n[→] Ejecutando NER ampliado (ORG, PERSON, NORP)...")
-    ner_results = run_ner_analysis(data_dir=Path("data"), output_dir=Path(export_dir))
+    logger.info("Ejecutando NER ampliado (ORG, PERSON, NORP)...")
+    ner_results = run_ner_analysis(data_dir=Path("data"), output_dir=export_dir)
     if ner_results:
-        print(f"[✓] NER completado: {ner_results['total']} entidades totales")
+        logger.info("NER completado: %d entidades totales", ner_results["total"])
 
-    print("\n[→] Ejecutando análisis de sentimiento...")
+    logger.info("Ejecutando análisis de sentimiento...")
     sentiment_results = run_sentiment_analysis(
-        data_dir=Path("data"), output_dir=Path(export_dir)
+        data_dir=Path("data"), output_dir=export_dir
     )
     if sentiment_results:
-        print(
-            f"[✓] Sentimiento completado: {sentiment_results['n_documents']} documentos analizados"
+        logger.info(
+            "Sentimiento completado: %d documentos analizados",
+            sentiment_results["n_documents"],
         )
 
-    print("\n[→] Generando mapa geoespacial Folium...")
-    geo_results = run_geo_analysis(
-        data_dir=Path("data/export"), output_dir=Path(export_dir)
-    )
+    logger.info("Generando mapa geoespacial Folium...")
+    geo_results = run_geo_analysis(data_dir=export_dir, output_dir=export_dir)
     if geo_results:
-        print(
-            f"[✓] Mapa geoespacial completado: {geo_results['entities_plotted']} entidades plotteadas"
+        logger.info(
+            "Mapa completado: %d entidades plotteadas", geo_results["entities_plotted"]
         )
 
-    print("\n[→] Ejecutando análisis RAG...")
-    rag_results = run_rag_analysis(data_dir=Path("data"), output_dir=Path(export_dir))
+    logger.info("Ejecutando análisis RAG...")
+    rag_results = run_rag_analysis(data_dir=Path("data"), output_dir=export_dir)
     if rag_results:
-        print(
-            f"[✓] RAG completado: {len(rag_results.get('answers', []))} consultas procesadas"
+        logger.info(
+            "RAG completado: %d consultas procesadas",
+            len(rag_results.get("answers", [])),
         )
 
-    # Statistical tests
-    from statistical_tests import run_statistical_tests
+    try:
+        from src.generate_report import generate_report
+        from src.generate_tables import generate as generate_exec_tables
+        from src.statistical_tests import run_statistical_tests
+    except ImportError:
+        from generate_report import generate_report
+        from generate_tables import generate as generate_exec_tables
+        from statistical_tests import run_statistical_tests
 
-    run_statistical_tests()
-
-    # Generate executive tables
-    from generate_tables import generate as generate_exec_tables
-
+    run_statistical_tests(data_dir=export_dir, output_dir=export_dir)
     generate_exec_tables()
+    generate_report(output_dir=export_dir)
 
-    # Generate paper report
-    from generate_report import generate_report
-
-    generate_report()
-
-    print("\n" + "=" * 60)
-    print("  ¡Exportación completada!")
-    print(f"  Archivos generados en: {export_dir}")
-    print("=" * 60)
+    logger.info("Exportación completada en %s", export_dir)
 
 
 if __name__ == "__main__":
+    from logging_config import setup_logging
+
+    setup_logging()
     main()

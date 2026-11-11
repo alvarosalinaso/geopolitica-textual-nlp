@@ -1,11 +1,12 @@
 """Topic analysis: bigrams + LDA for Chilean presidential speeches."""
 
-import json
+from __future__ import annotations
+
+import logging
 import math
 import re
-from pathlib import Path
+from typing import Any
 
-import pandas as pd
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer
 
@@ -16,7 +17,14 @@ try:
 except ImportError:
     SPACY_AVAILABLE = False
 
-BASE = Path(__file__).parent.parent
+try:
+    from src.data_loader import PROJECT_ROOT, load_speeches, write_json
+except ImportError:  # ejecución directa: python src/topic_analysis.py
+    from data_loader import PROJECT_ROOT, load_speeches, write_json
+
+logger = logging.getLogger(__name__)
+
+BASE = PROJECT_ROOT
 
 # Cache for the spaCy lemmatization model (loaded once if lemmatize=True).
 _NLP_LEMMA = None
@@ -32,7 +40,7 @@ def _get_nlp_lemma():
     return _NLP_LEMMA
 
 
-def _clean(text, lemmatize=False):
+def _clean(text: str, lemmatize: bool = False) -> str:
     """Normaliza texto: minúsculas, sin puntuación, sin stopwords.
 
     Si lemmatize=True y spaCy + es_core_news_sm están disponibles, aplica
@@ -148,12 +156,13 @@ def _umass_coherence(topics_words, word_matrix, feature_names):
     return coherence_scores, avg
 
 
-def analyze_topics(n_topics=5):
+def analyze_topics(n_topics: int = 5) -> dict[str, Any] | None:
     csv_path = BASE / "data" / "processed" / "speeches.csv"
     if not csv_path.exists():
+        logger.warning("No existe %s", csv_path)
         return None
 
-    df = pd.read_csv(csv_path)
+    df = load_speeches(csv_path)
     df["clean_text"] = df["text"].apply(_clean)
 
     vectorizer = CountVectorizer(min_df=2, max_features=200, ngram_range=(2, 2))
@@ -230,22 +239,21 @@ def analyze_topics(n_topics=5):
     result["k_candidates"] = k_candidates
     result["coherence_method"] = "umass_local"
 
-    output = BASE / "data" / "export" / "topics.json"
-    output.parent.mkdir(parents=True, exist_ok=True)
-    with open(output, "w", encoding="utf-8") as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
-
+    write_json(result, BASE / "data" / "export" / "topics.json")
     return result
 
 
 if __name__ == "__main__":
+    from logging_config import setup_logging
+
+    setup_logging()
     result = analyze_topics()
     if result:
-        print(f"Documents: {result['total_documents']}")
-        print(f"Bigrams found: {result['total_bigrams']}")
-        print(f"Topics (k={result['best_k']}): {len(result['topics'])}")
-        print(f"UMass coherence: {result['coherence_umass']}")
+        logger.info("Documentos: %d", result["total_documents"])
+        logger.info("Bigramas: %d", result["total_bigrams"])
+        logger.info("Tópicos (k=%d): %d", result["best_k"], len(result["topics"]))
+        logger.info("Coherencia UMass: %s", result["coherence_umass"])
         for t in result["topics"]:
-            print(f"  Topic {t['topic_id']}: {', '.join(t['words'][:5])}")
+            logger.info("Tópico %d: %s", t["topic_id"], ", ".join(t["words"][:5]))
     else:
-        print("No data found")
+        logger.warning("No se encontraron datos")
