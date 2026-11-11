@@ -14,7 +14,10 @@ env/
 data/raw/
 data/processed/*
 !data/processed/speeches.csv
-data/export/
+data/export/*
+!data/export/editorial/
+data/export/editorial/*
+!data/export/editorial/EMBED_GUIDE.md
 
 # OS
 .DS_Store
